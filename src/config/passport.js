@@ -1,0 +1,43 @@
+// src/config/passport.js
+
+import passport from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
+import User from '../models/User.js';
+
+/**
+ * Estrategia Local:
+ * - usernameField: 'email' (Passport toma req.body.email)
+ * - passwordField: 'password' (Passport toma req.body.password)
+ * Hace: findOne + comparePassword. Devuelve (err, user|false).
+ **/
+
+passport.use(
+    new LocalStrategy(
+        { usernameField: 'email', passwordField: 'password' },
+        async (email, password, done) => {
+            try {
+                console.log('[PASS] intento', { email });
+                const normEmail = String(email).toLowerCase().trim();
+
+                const user = await User.findOne({ email: normEmail });
+                if (!user) {
+                    console.log('[PASS] fail', { reason: 'email_not_found', email: normEmail });
+                    return done(null, false);
+                }
+
+                const ok = await user.comparePassword(password);
+                if (!ok) {
+                    console.log('[PASS] fail', { reason: 'bad_password', email: normEmail });
+                    return done(null, false);
+                }
+
+                console.log('[PASS] ok', { id: user._id.toString(), email: user.email, role: user.role });
+                return done(null, user);
+            } catch (err) {
+                return done(err);
+            }
+        }
+    )
+);
+
+export default passport;

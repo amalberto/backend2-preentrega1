@@ -1,0 +1,22 @@
+<div class="container">
+    <h1>Perfil de Usuario</h1>
+    <h2>Bienvenido, {{user.first_name}}!</h2>
+    
+    <div class="user-info">
+        <p><strong>Nombre completo:</strong> {{user.first_name}} {{user.last_name}}</p>
+        <p><strong>Email:</strong> {{user.email}}</p>
+        <p>
+            <strong>Rol:</strong> 
+            {{#if (eq user.role "admin")}}
+                <span class="badge badge-admin">ADMINISTRADOR</span>
+            {{else}}
+                <span class="badge badge-user">USUARIO</span>
+            {{/if}}
+        </p>
+        <p><strong>Miembro desde:</strong> {{formatDate user.createdAt}}</p>
+    </div>
+    
+    <form action="/api/users/logout" method="POST">
+        <button type="submit" class="logout-btn">Cerrar Sesión</button>
+    </form>
+</div>
