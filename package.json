@@ -5,7 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha test/**/*.test.js",
+    "test:dto": "mocha test/dto.test.js",
+    "test:users": "mocha test/users.api.test.js",
+    "test:sessions": "mocha test/sessions.api.test.js",
     "dev": "nodemon server.js",
     "start": "node server.js"
   },
@@ -30,6 +33,9 @@
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "chai": "^6.2.1",
+    "mocha": "^11.7.5",
+    "nodemon": "^3.1.11",
+    "supertest": "^7.1.4"
   }
 }

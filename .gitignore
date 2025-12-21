@@ -1,2 +1,12 @@
 node_modules/
 .env
+
+# Archivos de review de commits (temporales)
+COMMIT_*_REVIEW.md
+
+# Tests (no requeridos para la entrega)
+test/
+.mocharc.json
+
+# Plan de implementación (interno)
+proyecto_final.md

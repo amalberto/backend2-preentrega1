@@ -5,6 +5,27 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import User from '../models/User.js';
 
 /**
+ * Serialización de usuario para sesiones
+ * Guarda solo el ID del usuario en la sesión
+ */
+passport.serializeUser((user, done) => {
+    done(null, user._id.toString());
+});
+
+/**
+ * Deserialización de usuario desde sesiones
+ * Recupera el usuario completo desde la DB usando el ID
+ */
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await User.findById(id).select('-password');
+        done(null, user);
+    } catch (err) {
+        done(err, null);
+    }
+});
+
+/**
  * Estrategia Local:
  * - usernameField: 'email' (Passport toma req.body.email)
  * - passwordField: 'password' (Passport toma req.body.password)

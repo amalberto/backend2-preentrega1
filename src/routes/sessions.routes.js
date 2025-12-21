@@ -24,7 +24,7 @@ import { Router } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import passportCall from '../utils/passportCall.js';
+import { passportCall } from '../utils/passportCall.js';
 const router = Router();
 
 // POST /register - Crea usuario

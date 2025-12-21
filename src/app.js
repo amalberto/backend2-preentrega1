@@ -56,7 +56,7 @@ app.use(cookieParser(config.COOKIE_SECRET)); // Cookie firmada con secret
 app.use(createSessionMW());
 
 app.use(passport.initialize());
-// NO usar passport.session() si usamos solo JWT
+app.use(passport.session()); // Necesario para /api/sessions que usa passport con sesiones
 
 /* ===== Healthcheck ===== */
 app.get('/health', (_req, res) => res.json({ ok: true }));

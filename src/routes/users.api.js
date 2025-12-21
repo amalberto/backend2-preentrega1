@@ -7,6 +7,7 @@ import User from '../models/User.js';
 import { passportCall } from '../utils/passportCall.js';
 import { authorization } from '../middlewares/authorization.js';
 import config from '../config/environment.js';
+import UserCurrentDTO from '../dto/user/UserCurrentDTO.js';
 
 const router = Router();
 
@@ -168,17 +169,13 @@ router.post('/login', async (req, res, next) => {
  * GET /api/users/current
  * Obtener datos del usuario actual (requiere JWT)
  */
-router.get('/current', passportCall('jwt'), (req, res) => {
+router.get('/current', passportCall('current'), (req, res) => {
+    // Usar DTO para devolver solo datos seguros
+    const userDTO = UserCurrentDTO.from(req.user);
+    
     res.json({
         ok: true,
-        user: {
-            id: req.user._id,
-            first_name: req.user.first_name,
-            last_name: req.user.last_name,
-            email: req.user.email,
-            role: req.user.role,
-            createdAt: req.user.createdAt
-        }
+        user: userDTO
     });
 });
 

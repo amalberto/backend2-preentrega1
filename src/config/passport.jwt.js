@@ -2,7 +2,7 @@
 // Estrategia Passport-JWT para extraer tokens desde cookies
 
 import passport from 'passport';
-import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
+import { Strategy as JwtStrategy } from 'passport-jwt';
 import { cookieExtractor } from '../utils/cookieExtractor.js';
 import User from '../models/User.js';
 import config from './environment.js';
@@ -18,7 +18,11 @@ const jwtOptions = {
     // jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
 };
 
-passport.use('jwt', new JwtStrategy(jwtOptions, async (jwt_payload, done) => {
+/**
+ * Callback compartido para verificar JWT y cargar usuario
+ * NOTA: Se excluye password del usuario para defense-in-depth
+ */
+const jwtCallback = async (jwt_payload, done) => {
     try {
         console.log('[PASSPORT JWT] Verificando token:', {
             userId: jwt_payload.id,
@@ -26,8 +30,8 @@ passport.use('jwt', new JwtStrategy(jwtOptions, async (jwt_payload, done) => {
             exp: new Date(jwt_payload.exp * 1000).toISOString()
         });
         
-        // Buscar usuario por ID del payload
-        const user = await User.findById(jwt_payload.id);
+        // Buscar usuario por ID del payload (SIN password)
+        const user = await User.findById(jwt_payload.id).select('-password');
         
         if (!user) {
             console.log('[PASSPORT JWT] Usuario no encontrado:', jwt_payload.id);
@@ -47,6 +51,12 @@ passport.use('jwt', new JwtStrategy(jwtOptions, async (jwt_payload, done) => {
         console.error('[PASSPORT JWT] Error:', error.message);
         return done(error, false);
     }
-}));
+};
+
+// Registrar estrategia 'jwt' (compatibilidad hacia atrás)
+passport.use('jwt', new JwtStrategy(jwtOptions, jwtCallback));
+
+// Registrar estrategia 'current' (alias requerido por la entrega final)
+passport.use('current', new JwtStrategy(jwtOptions, jwtCallback));
 
 export default passport;
