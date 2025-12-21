@@ -98,6 +98,26 @@ class CartController {
             next(error);
         }
     }
+
+    /**
+     * POST /api/carts/:cid/purchase
+     * Finalizar compra del carrito
+     */
+    async purchase(req, res, next) {
+        try {
+            const { cid } = req.params;
+            const result = await cartService.purchase(cid, req.user);
+            
+            // Si no se procesó ningún producto, devolver 400
+            if (result.status === 'error') {
+                return res.status(400).json(result);
+            }
+            
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 // Exportar instancia

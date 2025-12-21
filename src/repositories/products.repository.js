@@ -39,6 +39,16 @@ class ProductRepository extends BaseRepository {
     async getActive(filter = {}, options = {}) {
         return this.dao.getActive(filter, options);
     }
+
+    /**
+     * Decrementar stock de forma atómica
+     * @param {string} productId - ID del producto
+     * @param {number} quantity - Cantidad a decrementar
+     * @returns {Promise<Object|null>} - Producto actualizado o null si no hay stock
+     */
+    async decrementStock(productId, quantity) {
+        return this.dao.decrementStock(productId, quantity);
+    }
 }
 
 // Exportar instancia singleton

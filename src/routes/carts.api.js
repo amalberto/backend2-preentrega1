@@ -48,4 +48,14 @@ router.delete('/:cid',
     cartController.clear.bind(cartController)
 );
 
+/**
+ * POST /api/carts/:cid/purchase
+ * Finalizar compra del carrito (solo user)
+ */
+router.post('/:cid/purchase',
+    passportCall('current'),
+    authorization('user'),
+    cartController.purchase.bind(cartController)
+);
+
 export default router;
