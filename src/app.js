@@ -25,6 +25,7 @@ import advancedRoutes from './routes/advanced.routes.js';
 import petsRoutes from './routes/pets.routes.js';
 import processRoutes from './routes/process.routes.js';
 import productsApiRouter from './routes/products.api.js';
+import cartsApiRouter from './routes/carts.api.js';
 
 // Rutas de vistas
 import usersViewsRoutes from './routes/users.views.js'; // Vistas Handlebars
@@ -69,6 +70,7 @@ app.use('/users', usersViewsRoutes); // /users/login, /users/current, /users/reg
 app.use('/api/users', usersApiRoutes); // API usuarios con JWT en cookie
 app.use('/api/sessions', sessionsRoutes); // Sesiones
 app.use('/api/products', productsApiRouter); // Products API
+app.use('/api/carts', cartsApiRouter); // Carts API
 app.use('/private', protectedRoutes); // Rutas protegidas
 app.use('/api/advanced', advancedRoutes); // Custom Router
 app.use('/api/pets', petsRoutes); // Router.param + regex
