@@ -108,6 +108,79 @@ class ProductService {
     async getByCode(code) {
         return this.repository.getByCode(code);
     }
+
+    /**
+     * Crear nuevo producto
+     * @param {Object} data - Datos del producto
+     * @returns {Promise<Object>}
+     */
+    async create(data) {
+        // Verificar código único
+        if (data.code) {
+            const existing = await this.repository.getByCode(data.code);
+            if (existing) {
+                const error = new Error('Ya existe un producto con ese código');
+                error.statusCode = 400;
+                throw error;
+            }
+        }
+        return this.repository.create(data);
+    }
+
+    /**
+     * Actualizar producto por ID
+     * @param {string} id - ID del producto
+     * @param {Object} data - Datos a actualizar
+     * @returns {Promise<Object>}
+     */
+    async update(id, data) {
+        // Validar formato de ObjectId
+        if (!mongoose.isValidObjectId(id)) {
+            const error = new Error('ID de producto inválido');
+            error.statusCode = 400;
+            throw error;
+        }
+
+        // Si viene código, verificar que no esté en uso por otro producto
+        if (data.code) {
+            const existing = await this.repository.getByCode(data.code);
+            if (existing && existing._id.toString() !== id) {
+                const error = new Error('Ya existe otro producto con ese código');
+                error.statusCode = 400;
+                throw error;
+            }
+        }
+
+        const product = await this.repository.updateById(id, data);
+        if (!product) {
+            const error = new Error('Producto no encontrado');
+            error.statusCode = 404;
+            throw error;
+        }
+        return product;
+    }
+
+    /**
+     * Eliminar producto por ID
+     * @param {string} id - ID del producto
+     * @returns {Promise<Object>}
+     */
+    async delete(id) {
+        // Validar formato de ObjectId
+        if (!mongoose.isValidObjectId(id)) {
+            const error = new Error('ID de producto inválido');
+            error.statusCode = 400;
+            throw error;
+        }
+
+        const product = await this.repository.deleteById(id);
+        if (!product) {
+            const error = new Error('Producto no encontrado');
+            error.statusCode = 404;
+            throw error;
+        }
+        return product;
+    }
 }
 
 // Exportar instancia singleton

@@ -54,6 +54,59 @@ class ProductController {
             next(error);
         }
     }
+
+    /**
+     * POST /api/products
+     * Crear nuevo producto (solo admin)
+     */
+    async create(req, res, next) {
+        try {
+            const product = await productService.create(req.body);
+            
+            res.status(201).json({
+                status: 'success',
+                payload: product
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * PUT /api/products/:pid
+     * Actualizar producto (solo admin)
+     */
+    async update(req, res, next) {
+        try {
+            const { pid } = req.params;
+            const product = await productService.update(pid, req.body);
+            
+            res.json({
+                status: 'success',
+                payload: product
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * DELETE /api/products/:pid
+     * Eliminar producto (solo admin)
+     */
+    async delete(req, res, next) {
+        try {
+            const { pid } = req.params;
+            await productService.delete(pid);
+            
+            res.json({
+                status: 'success',
+                message: 'Producto eliminado'
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 // Exportar instancia
