@@ -27,6 +27,7 @@ import processRoutes from './routes/process.routes.js';
 import productsApiRouter from './routes/products.api.js';
 import cartsApiRouter from './routes/carts.api.js';
 import mailApiRouter from './routes/mail.api.js';
+import passwordResetApiRouter from './routes/passwordReset.api.js';
 
 // Rutas de vistas
 import usersViewsRoutes from './routes/users.views.js'; // Vistas Handlebars
@@ -73,6 +74,7 @@ app.use('/api/sessions', sessionsRoutes); // Sesiones
 app.use('/api/products', productsApiRouter); // Products API
 app.use('/api/carts', cartsApiRouter); // Carts API
 app.use('/api/mail', mailApiRouter); // Mail API (test)
+app.use('/api/password-reset', passwordResetApiRouter); // Password Reset API (público)
 app.use('/private', protectedRoutes); // Rutas protegidas
 app.use('/api/advanced', advancedRoutes); // Custom Router
 app.use('/api/pets', petsRoutes); // Router.param + regex

@@ -20,5 +20,9 @@ export default {
     MAIL_SERVICE: process.env.MAIL_SERVICE || '',
     MAIL_USER: process.env.MAIL_USER || '',
     MAIL_PASS: process.env.MAIL_PASS || '',
-    MAIL_FROM_NAME: process.env.MAIL_FROM_NAME || 'Backend2 App'
+    MAIL_FROM_NAME: process.env.MAIL_FROM_NAME || 'Backend2 App',
+    
+    // Password Reset configuration
+    RESET_PASSWORD_TTL_MINUTES: process.env.RESET_PASSWORD_TTL_MINUTES || '60',
+    RESET_PASSWORD_URL_BASE: process.env.RESET_PASSWORD_URL_BASE || 'http://localhost:8080'
 };
