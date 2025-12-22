@@ -123,6 +123,14 @@ app.get('/api/jwt/me', jwtAuth, (req, res) => {
     res.json({ jwt: req.jwt });
 });
 
+/* ===== Admin Panel (solo admin) ===== */
+import { passportCall } from './utils/passportCall.js';
+import { authorization } from './middlewares/authorization.js';
+
+app.get('/admin-panel', passportCall('jwt'), authorization('admin'), (req, res) => {
+    res.render('adminPanel', { user: req.user });
+});
+
 /* ===== 404 explícito ===== */
 app.use((_req, res) => res.status(404).json({ message: 'Ruta no encontrada' }));
 
