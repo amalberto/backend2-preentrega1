@@ -2,6 +2,10 @@
     <h1>Iniciar Sesión</h1>
     <h2>Backend2</h2>
     
+    {{#if success}}
+        <div class="success">{{success}}</div>
+    {{/if}}
+    
     {{#if error}}
         <div class="error">{{error}}</div>
     {{/if}}
@@ -19,6 +23,10 @@
         
         <button type="submit">Iniciar Sesión</button>
     </form>
+    
+    <div class="link">
+        <p><a href="/forgot-password">¿Olvidaste tu contraseña?</a></p>
+    </div>
     
     <div class="link">
         <p>¿No tienes cuenta? <a href="/users/register">Regístrate aquí</a></p>

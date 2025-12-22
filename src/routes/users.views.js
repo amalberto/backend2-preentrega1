@@ -3,6 +3,7 @@
 
 import { Router } from 'express';
 import { passportCall } from '../utils/passportCall.js';
+import User from '../models/User.js';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ function isNotAuthenticated(req, res, next) {
 router.get('/login', isNotAuthenticated, (req, res) => {
     res.render('login', {
         title: 'Login',
+        success: req.query.registered ? '¡Registro exitoso! Ya podés iniciar sesión' : null,
         error: req.query.error ? 'Credenciales inválidas' : null
     });
 });
@@ -37,10 +39,64 @@ router.get('/login', isNotAuthenticated, (req, res) => {
  * Vista de registro
  */
 router.get('/register', isNotAuthenticated, (req, res) => {
+    let errorMsg = null;
+    if (req.query.error === 'exists') {
+        errorMsg = 'El email ya está registrado';
+    } else if (req.query.error) {
+        errorMsg = 'Error al registrar usuario';
+    }
+    
     res.render('register', {
         title: 'Registro',
-        error: req.query.error ? 'Error al registrar usuario' : null
+        error: errorMsg
     });
+});
+
+/**
+ * POST /users/register
+ * Procesa formulario de registro y redirige a login
+ */
+router.post('/register', isNotAuthenticated, async (req, res) => {
+    try {
+        const { first_name, last_name, age, email, password } = req.body;
+
+        // Validación básica
+        if (!first_name || !last_name || !email || !password) {
+            return res.redirect('/users/register?error=1');
+        }
+
+        // Age opcional (default 18)
+        const userAge = age ? parseInt(age, 10) : 18;
+
+        // Normalizar email
+        const normEmail = String(email).toLowerCase().trim();
+
+        // Verificar si ya existe
+        const existingUser = await User.findOne({ email: normEmail });
+        if (existingUser) {
+            return res.redirect('/users/register?error=exists');
+        }
+
+        // Determinar rol
+        const isAdmin = (normEmail === 'admin@ejemplo.com' && password === 'adminejemplO123');
+
+        // Crear usuario
+        await User.create({
+            first_name,
+            last_name,
+            age: userAge,
+            email: normEmail,
+            password,
+            role: isAdmin ? 'admin' : 'user'
+        });
+
+        // Redirigir a login con mensaje de éxito
+        return res.redirect(303, '/users/login?registered=1');
+
+    } catch (err) {
+        console.error('[REGISTER VIEW] Error:', err.message);
+        return res.redirect('/users/register?error=1');
+    }
 });
 
 /**

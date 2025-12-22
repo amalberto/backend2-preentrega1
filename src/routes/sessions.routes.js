@@ -34,21 +34,24 @@ router.post('/register', async (req, res, next) => {
         const { first_name, last_name, age, email, password } = req.body || {};
 
         // 2) Validación mínima para no guardar basura (dejamos lo fino para otra clase)
-        if (!first_name || !last_name || age == null || !email || !password) {
+        if (!first_name || !last_name || !email || !password) {
             return res
                 .status(400)
-                .json({ error: 'Faltan campos requeridos: first_name, last_name, age, email, password' });
+                .json({ error: 'Faltan campos requeridos: first_name, last_name, email, password' });
         }
+
+        // Age es opcional (default 18)
+        const userAge = age ? parseInt(age, 10) : 18;
 
         // 3) Normalizamos email (evita duplicados @Gmail.com)
         const normEmail = String(email).toLowerCase().trim();
 
         // 4) hash ocurre en User.pre('save')(bcrypt)
-        const isAdmin = (normEmail === 'admincoder@coder.com' && password === 'adminCod3r123');
+        const isAdmin = (normEmail === 'admin@ejemplo.com' && password === 'adminejemplO123');
         const user = await User.create({ 
             first_name, 
             last_name, 
-            age, 
+            age: userAge, 
             email: normEmail, 
             password,
             role: isAdmin ? 'admin' : 'user'

@@ -6,7 +6,7 @@
         <div class="error">{{error}}</div>
     {{/if}}
     
-    <form action="/api/users/register" method="POST">
+    <form action="/users/register" method="POST">
         <div class="form-group">
             <label for="first_name">Nombre:</label>
             <input type="text" id="first_name" name="first_name" required placeholder="Juan">
@@ -20,6 +20,11 @@
         <div class="form-group">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required placeholder="tu@email.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="age">Edad:</label>
+            <input type="number" id="age" name="age" required min="1" max="120" placeholder="25">
         </div>
         
         <div class="form-group">

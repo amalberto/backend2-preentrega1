@@ -68,6 +68,44 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 /* ===== Rutas de VISTAS (Handlebars) ===== */
 app.use('/users', usersViewsRoutes); // /users/login, /users/current, /users/register
 
+// Vista de productos (pública)
+app.get('/products', (req, res) => {
+    // Intentar obtener usuario del token si existe
+    const token = req.signedCookies?.currentUser;
+    res.render('products', { 
+        title: 'Productos',
+        user: token ? true : null // Simplificado, solo para mostrar/ocultar nav
+    });
+});
+
+// Redirect raíz a productos
+app.get('/', (req, res) => res.redirect('/products'));
+
+// Vista de "Olvidé mi contraseña"
+app.get('/forgot-password', (req, res) => {
+    res.render('forgotPassword', {
+        title: 'Recuperar Contraseña'
+    });
+});
+
+// Vista de reset password (desde link del email)
+app.get('/reset-password', (req, res) => {
+    const { token, email } = req.query;
+    
+    if (!token || !email) {
+        return res.render('resetPassword', {
+            title: 'Error',
+            error: 'Link inválido. Solicitá un nuevo enlace de recuperación.'
+        });
+    }
+    
+    res.render('resetPassword', {
+        title: 'Restablecer Contraseña',
+        token,
+        email
+    });
+});
+
 /* ===== Rutas de API (JSON) ===== */
 app.use('/api/users', usersApiRoutes); // API usuarios con JWT en cookie
 app.use('/api/sessions', sessionsRoutes); // Sesiones

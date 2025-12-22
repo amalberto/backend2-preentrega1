@@ -17,7 +17,7 @@ const router = Router();
  */
 router.post('/register', async (req, res, next) => {
     try {
-        const { first_name, last_name, email, password } = req.body;
+        const { first_name, last_name, age, email, password } = req.body;
         
         // Validación básica
         if (!first_name || !last_name || !email || !password) {
@@ -25,6 +25,9 @@ router.post('/register', async (req, res, next) => {
                 error: 'Todos los campos son requeridos: first_name, last_name, email, password'
             });
         }
+        
+        // Age es opcional (default 18)
+        const userAge = age ? parseInt(age, 10) : 18;
         
         // Normalizar email
         const normEmail = String(email).toLowerCase().trim();
@@ -38,12 +41,13 @@ router.post('/register', async (req, res, next) => {
         }
         
         // Determinar rol (admin si usa credenciales específicas)
-        const isAdmin = (normEmail === 'admincoder@coder.com' && password === 'adminCod3r123');
+        const isAdmin = (normEmail === 'admin@ejemplo.com' && password === 'adminejemplO123');
         
         // Crear usuario (password se hashea automáticamente en pre-save)
         const user = await User.create({
             first_name,
             last_name,
+            age: userAge,
             email: normEmail,
             password,
             role: isAdmin ? 'admin' : 'user'

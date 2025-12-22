@@ -16,6 +16,10 @@
         <p><strong>Miembro desde:</strong> {{formatDate user.createdAt}}</p>
     </div>
     
+    <div class="actions">
+        <a href="/products" class="btn btn-primary">🛒 Ver Productos</a>
+    </div>
+    
     <form action="/api/users/logout" method="POST">
         <button type="submit" class="logout-btn">Cerrar Sesión</button>
     </form>
