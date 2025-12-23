@@ -264,6 +264,53 @@ button:active {
     margin-top: 10px;
 }
 
+/* Acciones de carrito en cards */
+.product-card .cart-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.product-card .qty-input {
+    width: 90px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.product-card .btn-add-cart {
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.product-card .btn-add-cart:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Avisos */
+.notice {
+    margin: 15px 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.notice.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.notice.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
 .pagination {
     display: flex;
     justify-content: center;

@@ -6,7 +6,9 @@
         {{#if user}}
             <span>Hola, {{user.first_name}}</span> |
             <a href="/users/current">Mi Perfil</a> |
-            <a href="#" onclick="logout()">Cerrar Sesión</a>
+            <form action="/api/users/logout" method="POST" style="display:inline; margin:0;">
+                <button type="submit" class="logout-btn">Cerrar Sesión</button>
+            </form>
         {{else}}
             <a href="/users/login">Iniciar Sesión</a> |
             <a href="/users/register">Registrarse</a>
@@ -17,6 +19,8 @@
         <div class="error">{{error}}</div>
     {{/if}}
 
+    <div id="notice" class="notice" hidden></div>
+
     <div class="products-grid" id="products-grid">
         <p class="loading">Cargando productos...</p>
     </div>
@@ -24,53 +28,4 @@
     <div class="pagination" id="pagination"></div>
 </div>
 
-<script>
-    async function loadProducts() {
-        try {
-            const params = new URLSearchParams(window.location.search);
-            const page = params.get('page') || 1;
-            const limit = params.get('limit') || 10;
-            
-            const response = await fetch(`/api/products?page=${page}&limit=${limit}`);
-            const data = await response.json();
-            
-            const grid = document.getElementById('products-grid');
-            const pagination = document.getElementById('pagination');
-            
-            if (data.payload && data.payload.length > 0) {
-                grid.innerHTML = data.payload.map(product => `
-                    <div class="product-card">
-                        <h3>${product.title}</h3>
-                        <p class="description">${product.description || 'Sin descripción'}</p>
-                        <p class="price">$${product.price}</p>
-                        <p class="stock">Stock: ${product.stock}</p>
-                        <span class="category">${product.category || 'General'}</span>
-                    </div>
-                `).join('');
-                
-                // Paginación
-                let paginationHtml = '';
-                if (data.hasPrevPage) {
-                    paginationHtml += `<a href="?page=${data.prevPage}&limit=${limit}" class="btn-page">← Anterior</a>`;
-                }
-                paginationHtml += `<span class="page-info">Página ${data.page} de ${data.totalPages}</span>`;
-                if (data.hasNextPage) {
-                    paginationHtml += `<a href="?page=${data.nextPage}&limit=${limit}" class="btn-page">Siguiente →</a>`;
-                }
-                pagination.innerHTML = paginationHtml;
-            } else {
-                grid.innerHTML = '<p class="no-products">No hay productos disponibles</p>';
-            }
-        } catch (err) {
-            document.getElementById('products-grid').innerHTML = 
-                '<p class="error">Error cargando productos</p>';
-        }
-    }
-    
-    function logout() {
-        fetch('/api/users/logout', { method: 'POST' })
-            .then(() => window.location.reload());
-    }
-    
-    loadProducts();
-</script>
+<script src="/js/products.page.js"></script>

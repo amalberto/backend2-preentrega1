@@ -1,0 +1,369 @@
+diff -ruN /mnt/data/backend2_orig/backend2-preentrega1-main/public/css/styles.css /mnt/data/backend2/backend2-preentrega1-main/public/css/styles.css
+--- /mnt/data/backend2_orig/backend2-preentrega1-main/public/css/styles.css	2025-12-23 18:37:55.000000000 +0000
++++ /mnt/data/backend2/backend2-preentrega1-main/public/css/styles.css	2025-12-23 18:57:35.398661000 +0000
+@@ -264,6 +264,53 @@
+     margin-top: 10px;
+ }
+ 
++/* Acciones de carrito en cards */
++.product-card .cart-actions {
++    display: flex;
++    gap: 10px;
++    align-items: center;
++    margin-top: 12px;
++}
++
++.product-card .qty-input {
++    width: 90px;
++    padding: 10px;
++    border: 1px solid #ddd;
++    border-radius: 6px;
++}
++
++.product-card .btn-add-cart {
++    padding: 10px 14px;
++    border-radius: 6px;
++    border: none;
++    cursor: pointer;
++    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
++    color: #fff;
++}
++
++.product-card .btn-add-cart:disabled {
++    opacity: 0.6;
++    cursor: not-allowed;
++}
++
++/* Avisos */
++.notice {
++    margin: 15px 0;
++    padding: 12px 14px;
++    border-radius: 8px;
++    font-weight: 500;
++}
++
++.notice.success {
++    background: #d4edda;
++    color: #155724;
++}
++
++.notice.error {
++    background: #f8d7da;
++    color: #721c24;
++}
++
+ .pagination {
+     display: flex;
+     justify-content: center;
+diff -ruN /mnt/data/backend2_orig/backend2-preentrega1-main/public/js/products.page.js /mnt/data/backend2/backend2-preentrega1-main/public/js/products.page.js
+--- /mnt/data/backend2_orig/backend2-preentrega1-main/public/js/products.page.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/backend2/backend2-preentrega1-main/public/js/products.page.js	2025-12-23 18:56:53.275089422 +0000
+@@ -0,0 +1,229 @@
++// public/js/products.page.js
++// UI de catálogo + "Agregar al carrito" (Handlebars + JS)
++
++const CART_ID_KEY = 'backend2:cartId:v1';
++
++const productsGrid = document.getElementById('products-grid');
++const pagination = document.getElementById('pagination');
++const notice = document.getElementById('notice');
++
++/**
++ * Mostrar aviso no intrusivo en la UI
++ */
++function showNotice(message, type = 'info') {
++  if (!notice) return;
++  notice.textContent = message;
++  notice.className = `notice ${type}`;
++  notice.hidden = false;
++
++  window.clearTimeout(showNotice._t);
++  showNotice._t = window.setTimeout(() => {
++    notice.hidden = true;
++  }, 3500);
++}
++
++/**
++ * Intenta obtener el usuario actual vía API.
++ * Devuelve null si no hay sesión.
++ */
++async function getCurrentUser() {
++  try {
++    const res = await fetch('/api/users/current', { credentials: 'include' });
++    if (!res.ok) return null;
++    const data = await res.json();
++    return data?.payload || null;
++  } catch {
++    return null;
++  }
++}
++
++/**
++ * Obtiene o crea un cartId y lo guarda en localStorage.
++ * Si el cart guardado ya no existe, crea uno nuevo.
++ */
++async function ensureCartId() {
++  const stored = window.localStorage.getItem(CART_ID_KEY);
++  if (stored) return stored;
++
++  const res = await fetch('/api/carts', {
++    method: 'POST',
++    headers: { 'Content-Type': 'application/json' },
++    credentials: 'include'
++  });
++
++  if (!res.ok) {
++    const data = await safeJson(res);
++    throw new Error(data?.error || data?.message || 'No se pudo crear el carrito');
++  }
++
++  const data = await res.json();
++  const cartId = data?.payload?._id;
++  if (!cartId) throw new Error('Respuesta inválida al crear carrito');
++
++  window.localStorage.setItem(CART_ID_KEY, cartId);
++  return cartId;
++}
++
++function safeNumber(value, fallback = 1) {
++  const n = Number(value);
++  return Number.isFinite(n) ? n : fallback;
++}
++
++async function safeJson(res) {
++  try {
++    return await res.json();
++  } catch {
++    return null;
++  }
++}
++
++async function addToCart(productId, quantity) {
++  // 1) sesión
++  const user = await getCurrentUser();
++  if (!user) {
++    window.location.href = '/users/login';
++    return;
++  }
++  if (user.role !== 'user') {
++    showNotice('Solo usuarios con rol "user" pueden comprar.', 'error');
++    return;
++  }
++
++  // 2) cart
++  let cartId = await ensureCartId();
++
++  // 3) llamada
++  const doRequest = async () =>
++    fetch(`/api/carts/${cartId}/products/${productId}`, {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json' },
++      credentials: 'include',
++      body: JSON.stringify({ quantity })
++    });
++
++  let res = await doRequest();
++
++  // Si el cart guardado quedó inválido, recrear y reintentar 1 vez.
++  if (res.status === 404) {
++    window.localStorage.removeItem(CART_ID_KEY);
++    cartId = await ensureCartId();
++    res = await doRequest();
++  }
++
++  if (res.status === 401) {
++    window.location.href = '/users/login';
++    return;
++  }
++
++  const data = await safeJson(res);
++  if (!res.ok) {
++    const msg = data?.error || data?.message || 'No se pudo agregar al carrito';
++    showNotice(msg, 'error');
++    return;
++  }
++
++  showNotice('✅ Producto agregado al carrito', 'success');
++}
++
++function buildProductCard(product) {
++  const disabled = !product?.status || product?.stock <= 0;
++  const stockLabel = product?.stock > 0 ? `${product.stock} disponibles` : 'Sin stock';
++  const buttonLabel = disabled ? 'No disponible' : 'Agregar al carrito';
++
++  return `
++    <div class="product-card" data-pid="${product._id}">
++      <h3>${product.title}</h3>
++      <p>${product.description}</p>
++      <p class="price">$${product.price}</p>
++      <p class="stock">${stockLabel}</p>
++      <p class="category">Categoría: ${product.category}</p>
++
++      <div class="cart-actions">
++        <input
++          class="qty-input"
++          type="number"
++          min="1"
++          value="1"
++          ${disabled ? 'disabled' : ''}
++        />
++        <button class="btn-add-cart" ${disabled ? 'disabled' : ''}>
++          ${buttonLabel}
++        </button>
++      </div>
++    </div>
++  `;
++}
++
++function updatePagination(data) {
++  const currentPage = data.page;
++  const totalPages = data.totalPages;
++
++  let html = '';
++  if (data.hasPrevPage) {
++    html += `<a href="?page=${data.prevPage}" class="page-link">Anterior</a>`;
++  }
++
++  html += `<span class="current-page">Página ${currentPage} de ${totalPages}</span>`;
++
++  if (data.hasNextPage) {
++    html += `<a href="?page=${data.nextPage}" class="page-link">Siguiente</a>`;
++  }
++
++  pagination.innerHTML = html;
++}
++
++async function loadProducts() {
++  try {
++    const params = new URLSearchParams(window.location.search);
++    const page = params.get('page') || 1;
++
++    const res = await fetch(`/api/products?page=${page}`, { credentials: 'include' });
++    if (!res.ok) {
++      const data = await safeJson(res);
++      throw new Error(data?.error || data?.message || 'No se pudieron cargar productos');
++    }
++
++    const data = await res.json();
++    const products = data.payload || [];
++
++    productsGrid.innerHTML = products.map(buildProductCard).join('');
++    updatePagination(data);
++  } catch (error) {
++    productsGrid.innerHTML = `<p class="error">Error: ${error.message}</p>`;
++  }
++}
++
++function wireAddToCart() {
++  if (!productsGrid) return;
++
++  productsGrid.addEventListener('click', async (e) => {
++    const button = e.target?.closest?.('.btn-add-cart');
++    if (!button) return;
++
++    const card = button.closest('.product-card');
++    const productId = card?.dataset?.pid;
++    const qtyInput = card?.querySelector('.qty-input');
++    const qty = safeNumber(qtyInput?.value, 1);
++
++    if (!productId) {
++      showNotice('Producto inválido', 'error');
++      return;
++    }
++    if (!Number.isFinite(qty) || qty < 1) {
++      showNotice('Cantidad inválida', 'error');
++      return;
++    }
++
++    button.disabled = true;
++    try {
++      await addToCart(productId, qty);
++    } finally {
++      button.disabled = false;
++    }
++  });
++}
++
++document.addEventListener('DOMContentLoaded', async () => {
++  wireAddToCart();
++  await loadProducts();
++});
+diff -ruN /mnt/data/backend2_orig/backend2-preentrega1-main/src/views/products.handlebars /mnt/data/backend2/backend2-preentrega1-main/src/views/products.handlebars
+--- /mnt/data/backend2_orig/backend2-preentrega1-main/src/views/products.handlebars	2025-12-23 18:37:55.000000000 +0000
++++ /mnt/data/backend2/backend2-preentrega1-main/src/views/products.handlebars	2025-12-23 18:56:01.600720063 +0000
+@@ -6,7 +6,9 @@
+         {{#if user}}
+             <span>Hola, {{user.first_name}}</span> |
+             <a href="/users/current">Mi Perfil</a> |
+-            <a href="#" onclick="logout()">Cerrar Sesión</a>
++			<form action="/api/users/logout" method="POST" style="display:inline; margin:0;">
++				<button type="submit" class="logout-btn">Cerrar Sesión</button>
++			</form>
+         {{else}}
+             <a href="/users/login">Iniciar Sesión</a> |
+             <a href="/users/register">Registrarse</a>
+@@ -17,60 +19,13 @@
+         <div class="error">{{error}}</div>
+     {{/if}}
+ 
++	<div id="notice" class="notice" hidden></div>
++
+     <div class="products-grid" id="products-grid">
+         <p class="loading">Cargando productos...</p>
+     </div>
+ 
+-    <div class="pagination" id="pagination"></div>
++	<div class="pagination" id="pagination"></div>
+ </div>
+ 
+-<script>
+-    async function loadProducts() {
+-        try {
+-            const params = new URLSearchParams(window.location.search);
+-            const page = params.get('page') || 1;
+-            const limit = params.get('limit') || 10;
+-            
+-            const response = await fetch(`/api/products?page=${page}&limit=${limit}`);
+-            const data = await response.json();
+-            
+-            const grid = document.getElementById('products-grid');
+-            const pagination = document.getElementById('pagination');
+-            
+-            if (data.payload && data.payload.length > 0) {
+-                grid.innerHTML = data.payload.map(product => `
+-                    <div class="product-card">
+-                        <h3>${product.title}</h3>
+-                        <p class="description">${product.description || 'Sin descripción'}</p>
+-                        <p class="price">$${product.price}</p>
+-                        <p class="stock">Stock: ${product.stock}</p>
+-                        <span class="category">${product.category || 'General'}</span>
+-                    </div>
+-                `).join('');
+-                
+-                // Paginación
+-                let paginationHtml = '';
+-                if (data.hasPrevPage) {
+-                    paginationHtml += `<a href="?page=${data.prevPage}&limit=${limit}" class="btn-page">← Anterior</a>`;
+-                }
+-                paginationHtml += `<span class="page-info">Página ${data.page} de ${data.totalPages}</span>`;
+-                if (data.hasNextPage) {
+-                    paginationHtml += `<a href="?page=${data.nextPage}&limit=${limit}" class="btn-page">Siguiente →</a>`;
+-                }
+-                pagination.innerHTML = paginationHtml;
+-            } else {
+-                grid.innerHTML = '<p class="no-products">No hay productos disponibles</p>';
+-            }
+-        } catch (err) {
+-            document.getElementById('products-grid').innerHTML = 
+-                '<p class="error">Error cargando productos</p>';
+-        }
+-    }
+-    
+-    function logout() {
+-        fetch('/api/users/logout', { method: 'POST' })
+-            .then(() => window.location.reload());
+-    }
+-    
+-    loadProducts();
+-</script>
++<script src="/js/products.page.js"></script>
