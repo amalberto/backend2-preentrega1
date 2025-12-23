@@ -4,6 +4,7 @@
 import { Router } from 'express';
 import { passportCall } from '../utils/passportCall.js';
 import User from '../models/User.js';
+import cartService from '../services/carts.service.js';
 
 const router = Router();
 
@@ -81,7 +82,7 @@ router.post('/register', isNotAuthenticated, async (req, res) => {
         const isAdmin = (normEmail === 'admin@ejemplo.com' && password === 'adminejemplO123');
 
         // Crear usuario
-        await User.create({
+        const user = await User.create({
             first_name,
             last_name,
             age: userAge,
@@ -89,6 +90,9 @@ router.post('/register', isNotAuthenticated, async (req, res) => {
             password,
             role: isAdmin ? 'admin' : 'user'
         });
+
+        // Asegurar carrito para usuarios "user"
+        await cartService.ensureUserCart(user);
 
         // Redirigir a login con mensaje de éxito
         return res.redirect(303, '/users/login?registered=1');

@@ -8,6 +8,7 @@ import { passportCall } from '../utils/passportCall.js';
 import { authorization } from '../middlewares/authorization.js';
 import config from '../config/environment.js';
 import UserCurrentDTO from '../dto/user/UserCurrentDTO.js';
+import cartService from '../services/carts.service.js';
 
 const router = Router();
 
@@ -52,6 +53,10 @@ router.post('/register', async (req, res, next) => {
             password,
             role: isAdmin ? 'admin' : 'user'
         });
+
+        // Asegurar que los usuarios "user" tengan carrito asignado
+        // (para que el front no tenga que "adivinar" el cartId)
+        await cartService.ensureUserCart(user);
         
         console.log('[REGISTER] Usuario creado:', {
             id: user._id,
@@ -120,6 +125,9 @@ router.post('/login', async (req, res, next) => {
             }
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
+
+        // Asegurar que los usuarios "user" tengan carrito asignado
+        await cartService.ensureUserCart(user);
         
         // Generar JWT
         const token = jwt.sign(
@@ -160,7 +168,8 @@ router.post('/login', async (req, res, next) => {
                 first_name: user.first_name,
                 last_name: user.last_name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                cart: user.cart || null
             }
         });
         

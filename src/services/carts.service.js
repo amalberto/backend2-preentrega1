@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cartRepository from '../repositories/carts.repository.js';
 import productRepository from '../repositories/products.repository.js';
 import ticketService from './tickets.service.js';
+import User from '../models/User.js';
 
 /**
  * Helper: extraer ID de producto de un item del carrito
@@ -25,6 +26,50 @@ class CartService {
     constructor() {
         this.repository = cartRepository;
         this.productRepository = productRepository;
+    }
+
+    /**
+     * Asegurar que un usuario tenga un carrito asociado.
+     * - Si user.cart existe pero el carrito no existe, crea uno nuevo.
+     * - Solo aplica para rol "user".
+     *
+     * @param {Object} user - Usuario autenticado (req.user)
+     * @returns {Promise<Object>} - Carrito (doc lean)
+     */
+    async ensureUserCart(user) {
+        if (!user || !user._id) {
+            const error = new Error('Usuario no autenticado');
+            error.statusCode = 401;
+            throw error;
+        }
+
+        // Por reglas del proyecto, solo los users operan carrito.
+        if (user.role && user.role !== 'user') {
+            const error = new Error('Solo los usuarios con rol "user" pueden operar carrito');
+            error.statusCode = 403;
+            throw error;
+        }
+
+        // Si ya tiene cart y existe, devolvemos.
+        if (user.cart) {
+            const existing = await this.repository.getById(user.cart);
+            if (existing) return existing;
+        }
+
+        // Crear carrito y asociarlo al user.
+        const created = await this.repository.create({ products: [] });
+        const cartId = created?._id;
+
+        await User.findByIdAndUpdate(user._id, { cart: cartId });
+
+        // Mantener el req.user actualizado en memoria (por si se usa luego en el request).
+        if (typeof user.set === 'function') {
+            user.set('cart', cartId);
+        } else {
+            user.cart = cartId;
+        }
+
+        return created;
     }
 
     /**

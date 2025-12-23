@@ -24,6 +24,26 @@ class CartController {
     }
 
     /**
+     * POST /api/carts/mine
+     * Crear u obtener el carrito del usuario autenticado
+     */
+    async mine(req, res, next) {
+        try {
+            const cart = await cartService.ensureUserCart(req.user);
+
+            res.json({
+                status: 'success',
+                payload: {
+                    cartId: cart._id,
+                    cart
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
      * GET /api/carts/:cid
      * Obtener carrito por ID
      */

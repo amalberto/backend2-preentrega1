@@ -1,8 +1,6 @@
 // public/js/products.page.js
 // UI de catálogo + "Agregar al carrito" (Handlebars + JS)
 
-const CART_ID_KEY = 'backend2:cartId:v1';
-
 const productsGrid = document.getElementById('products-grid');
 const pagination = document.getElementById('pagination');
 const notice = document.getElementById('notice');
@@ -38,29 +36,23 @@ async function getCurrentUser() {
 }
 
 /**
- * Obtiene o crea un cartId y lo guarda en localStorage.
- * Si el cart guardado ya no existe, crea uno nuevo.
+ * Obtiene (o crea) el carrito del usuario autenticado.
+ * Backend: POST /api/carts/mine
  */
 async function ensureCartId() {
-  const stored = window.localStorage.getItem(CART_ID_KEY);
-  if (stored) return stored;
-
-  const res = await fetch('/api/carts', {
+  const res = await fetch('/api/carts/mine', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     credentials: 'include'
   });
 
+  const data = await safeJson(res);
   if (!res.ok) {
-    const data = await safeJson(res);
-    throw new Error(data?.error || data?.message || 'No se pudo crear el carrito');
+    throw new Error(data?.error || data?.message || 'No se pudo obtener el carrito');
   }
 
-  const data = await res.json();
-  const cartId = data?.payload?._id;
-  if (!cartId) throw new Error('Respuesta inválida al crear carrito');
+  const cartId = data?.payload?.cartId;
+  if (!cartId) throw new Error('Respuesta inválida al obtener carrito');
 
-  window.localStorage.setItem(CART_ID_KEY, cartId);
   return cartId;
 }
 
@@ -90,7 +82,7 @@ async function addToCart(productId, quantity) {
   }
 
   // 2) cart
-  let cartId = await ensureCartId();
+  const cartId = await ensureCartId();
 
   // 3) llamada
   const doRequest = async () =>
@@ -101,14 +93,7 @@ async function addToCart(productId, quantity) {
       body: JSON.stringify({ quantity })
     });
 
-  let res = await doRequest();
-
-  // Si el cart guardado quedó inválido, recrear y reintentar 1 vez.
-  if (res.status === 404) {
-    window.localStorage.removeItem(CART_ID_KEY);
-    cartId = await ensureCartId();
-    res = await doRequest();
-  }
+  const res = await doRequest();
 
   if (res.status === 401) {
     window.location.href = '/users/login';

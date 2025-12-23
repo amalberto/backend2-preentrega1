@@ -1,0 +1,275 @@
+diff --git a/public/js/products.page.js b/public/js/products.page.js
+index d212e59..f197ea2 100644
+--- a/public/js/products.page.js
++++ b/public/js/products.page.js
+@@ -1,8 +1,6 @@
+ // public/js/products.page.js
+ // UI de catálogo + "Agregar al carrito" (Handlebars + JS)
+ 
+-const CART_ID_KEY = 'backend2:cartId:v1';
+-
+ const productsGrid = document.getElementById('products-grid');
+ const pagination = document.getElementById('pagination');
+ const notice = document.getElementById('notice');
+@@ -38,29 +36,23 @@ async function getCurrentUser() {
+ }
+ 
+ /**
+- * Obtiene o crea un cartId y lo guarda en localStorage.
+- * Si el cart guardado ya no existe, crea uno nuevo.
++ * Obtiene (o crea) el carrito del usuario autenticado.
++ * Backend: POST /api/carts/mine
+  */
+ async function ensureCartId() {
+-  const stored = window.localStorage.getItem(CART_ID_KEY);
+-  if (stored) return stored;
+-
+-  const res = await fetch('/api/carts', {
++  const res = await fetch('/api/carts/mine', {
+     method: 'POST',
+-    headers: { 'Content-Type': 'application/json' },
+     credentials: 'include'
+   });
+ 
++  const data = await safeJson(res);
+   if (!res.ok) {
+-    const data = await safeJson(res);
+-    throw new Error(data?.error || data?.message || 'No se pudo crear el carrito');
++    throw new Error(data?.error || data?.message || 'No se pudo obtener el carrito');
+   }
+ 
+-  const data = await res.json();
+-  const cartId = data?.payload?._id;
+-  if (!cartId) throw new Error('Respuesta inválida al crear carrito');
++  const cartId = data?.payload?.cartId;
++  if (!cartId) throw new Error('Respuesta inválida al obtener carrito');
+ 
+-  window.localStorage.setItem(CART_ID_KEY, cartId);
+   return cartId;
+ }
+ 
+@@ -90,7 +82,7 @@ async function addToCart(productId, quantity) {
+   }
+ 
+   // 2) cart
+-  let cartId = await ensureCartId();
++  const cartId = await ensureCartId();
+ 
+   // 3) llamada
+   const doRequest = async () =>
+@@ -101,14 +93,7 @@ async function addToCart(productId, quantity) {
+       body: JSON.stringify({ quantity })
+     });
+ 
+-  let res = await doRequest();
+-
+-  // Si el cart guardado quedó inválido, recrear y reintentar 1 vez.
+-  if (res.status === 404) {
+-    window.localStorage.removeItem(CART_ID_KEY);
+-    cartId = await ensureCartId();
+-    res = await doRequest();
+-  }
++  const res = await doRequest();
+ 
+   if (res.status === 401) {
+     window.location.href = '/users/login';
+diff --git a/src/controllers/carts.controller.js b/src/controllers/carts.controller.js
+index 4dd625b..6043cc5 100644
+--- a/src/controllers/carts.controller.js
++++ b/src/controllers/carts.controller.js
+@@ -23,6 +23,26 @@ class CartController {
+         }
+     }
+ 
++    /**
++     * POST /api/carts/mine
++     * Crear u obtener el carrito del usuario autenticado
++     */
++    async mine(req, res, next) {
++        try {
++            const cart = await cartService.ensureUserCart(req.user);
++
++            res.json({
++                status: 'success',
++                payload: {
++                    cartId: cart._id,
++                    cart
++                }
++            });
++        } catch (error) {
++            next(error);
++        }
++    }
++
+     /**
+      * GET /api/carts/:cid
+      * Obtener carrito por ID
+diff --git a/src/routes/carts.api.js b/src/routes/carts.api.js
+index 45dfa88..6d3435b 100644
+--- a/src/routes/carts.api.js
++++ b/src/routes/carts.api.js
+@@ -6,6 +6,17 @@ import { authorization } from '../middlewares/authorization.js';
+ 
+ const router = Router();
+ 
++/**
++ * POST /api/carts/mine
++ * Crear u obtener el carrito del usuario autenticado
++ * (evita que el front "adivine" el cartId)
++ */
++router.post('/mine',
++    passportCall('current'),
++    authorization('user'),
++    cartController.mine.bind(cartController)
++);
++
+ /**
+  * POST /api/carts
+  * Crear carrito vacío (público por ahora)
+diff --git a/src/routes/users.api.js b/src/routes/users.api.js
+index be47d67..bc8473f 100644
+--- a/src/routes/users.api.js
++++ b/src/routes/users.api.js
+@@ -8,6 +8,7 @@ import { passportCall } from '../utils/passportCall.js';
+ import { authorization } from '../middlewares/authorization.js';
+ import config from '../config/environment.js';
+ import UserCurrentDTO from '../dto/user/UserCurrentDTO.js';
++import cartService from '../services/carts.service.js';
+ 
+ const router = Router();
+ 
+@@ -52,6 +53,10 @@ router.post('/register', async (req, res, next) => {
+             password,
+             role: isAdmin ? 'admin' : 'user'
+         });
++
++        // Asegurar que los usuarios "user" tengan carrito asignado
++        // (para que el front no tenga que "adivinar" el cartId)
++        await cartService.ensureUserCart(user);
+         
+         console.log('[REGISTER] Usuario creado:', {
+             id: user._id,
+@@ -67,7 +72,8 @@ router.post('/register', async (req, res, next) => {
+                 first_name: user.first_name,
+                 last_name: user.last_name,
+                 email: user.email,
+-                role: user.role
++                role: user.role,
++                cart: user.cart || null
+             }
+         });
+         
+@@ -120,6 +126,9 @@ router.post('/login', async (req, res, next) => {
+             }
+             return res.status(401).json({ error: 'Credenciales inválidas' });
+         }
++
++        // Asegurar que los usuarios "user" tengan carrito asignado
++        await cartService.ensureUserCart(user);
+         
+         // Generar JWT
+         const token = jwt.sign(
+@@ -160,7 +169,8 @@ router.post('/login', async (req, res, next) => {
+                 first_name: user.first_name,
+                 last_name: user.last_name,
+                 email: user.email,
+-                role: user.role
++                role: user.role,
++                cart: user.cart || null
+             }
+         });
+         
+diff --git a/src/routes/users.views.js b/src/routes/users.views.js
+index 4cedb1d..224f9b7 100644
+--- a/src/routes/users.views.js
++++ b/src/routes/users.views.js
+@@ -4,6 +4,7 @@
+ import { Router } from 'express';
+ import { passportCall } from '../utils/passportCall.js';
+ import User from '../models/User.js';
++import cartService from '../services/carts.service.js';
+ 
+ const router = Router();
+ 
+@@ -81,7 +82,7 @@ router.post('/register', isNotAuthenticated, async (req, res) => {
+         const isAdmin = (normEmail === 'admin@ejemplo.com' && password === 'adminejemplO123');
+ 
+         // Crear usuario
+-        await User.create({
++        const user = await User.create({
+             first_name,
+             last_name,
+             age: userAge,
+@@ -90,6 +91,9 @@ router.post('/register', isNotAuthenticated, async (req, res) => {
+             role: isAdmin ? 'admin' : 'user'
+         });
+ 
++        // Asegurar carrito para usuarios "user"
++        await cartService.ensureUserCart(user);
++
+         // Redirigir a login con mensaje de éxito
+         return res.redirect(303, '/users/login?registered=1');
+ 
+diff --git a/src/services/carts.service.js b/src/services/carts.service.js
+index 4b6a77c..6c45a35 100644
+--- a/src/services/carts.service.js
++++ b/src/services/carts.service.js
+@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
+ import cartRepository from '../repositories/carts.repository.js';
+ import productRepository from '../repositories/products.repository.js';
+ import ticketService from './tickets.service.js';
++import User from '../models/User.js';
+ 
+ /**
+  * Helper: extraer ID de producto de un item del carrito
+@@ -27,6 +28,50 @@ class CartService {
+         this.productRepository = productRepository;
+     }
+ 
++    /**
++     * Asegurar que un usuario tenga un carrito asociado.
++     * - Si user.cart existe pero el carrito no existe, crea uno nuevo.
++     * - Solo aplica para rol "user".
++     *
++     * @param {Object} user - Usuario autenticado (req.user)
++     * @returns {Promise<Object>} - Carrito (doc lean)
++     */
++    async ensureUserCart(user) {
++        if (!user || !user._id) {
++            const error = new Error('Usuario no autenticado');
++            error.statusCode = 401;
++            throw error;
++        }
++
++        // Por reglas del proyecto, solo los users operan carrito.
++        if (user.role && user.role !== 'user') {
++            const error = new Error('Solo los usuarios con rol "user" pueden operar carrito');
++            error.statusCode = 403;
++            throw error;
++        }
++
++        // Si ya tiene cart y existe, devolvemos.
++        if (user.cart) {
++            const existing = await this.repository.getById(user.cart);
++            if (existing) return existing;
++        }
++
++        // Crear carrito y asociarlo al user.
++        const created = await this.repository.create({ products: [] });
++        const cartId = created?._id;
++
++        await User.findByIdAndUpdate(user._id, { cart: cartId });
++
++        // Mantener el req.user actualizado en memoria (por si se usa luego en el request).
++        if (typeof user.set === 'function') {
++            user.set('cart', cartId);
++        } else {
++            user.cart = cartId;
++        }
++
++        return created;
++    }
++
+     /**
+      * Crear carrito vacío
+      * @returns {Promise<Object>}
