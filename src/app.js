@@ -131,6 +131,11 @@ app.get('/admin-panel', passportCall('jwt'), authorization('admin'), (req, res) 
     res.render('adminPanel', { user: req.user });
 });
 
+/* ===== Vista de carrito (solo user) ===== */
+app.get('/my-cart', passportCall('jwt'), authorization('user'), (req, res) => {
+    res.render('cart', { user: req.user });
+});
+
 /* ===== 404 explícito ===== */
 app.use((_req, res) => res.status(404).json({ message: 'Ruta no encontrada' }));
 
