@@ -54,7 +54,7 @@ MAIL_FROM_NAME=Backend2 App
 
 # === PASSWORD RESET ===
 RESET_PASSWORD_TTL_MINUTES=60
-RESET_PASSWORD_URL_BASE=http://localhost:8080
+RESET_PASSWORD_URL_BASE=http://localhost:3000
 ```
 
 > **Gmail**: Requiere 2FA + App Password. [Crear aquí](https://myaccount.google.com/apppasswords)

@@ -4,3 +4,6 @@ node_modules/
 # Archivos temporales de pruebas
 cookies.txt
 session.xml
+
+# Plan de fixes (interno)
+fixes_roadmap.md

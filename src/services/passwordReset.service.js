@@ -5,7 +5,7 @@ import { sendMail } from '../utils/mailer.js';
 import config from '../config/environment.js';
 
 const TTL_MINUTES = parseInt(config.RESET_PASSWORD_TTL_MINUTES) || 60;
-const BASE_URL = config.RESET_PASSWORD_URL_BASE || 'http://localhost:8080';
+const BASE_URL = config.RESET_PASSWORD_URL_BASE || 'http://localhost:3000';
 
 /**
  * Validación simple de email
