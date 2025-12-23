@@ -375,3 +375,43 @@ button:active {
     margin-top: 20px;
     flex-wrap: wrap;
 }
+
+/* ==========================================
+   Password Toggle Visibility
+   ========================================== */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    flex: 1;
+    padding-right: 45px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: color 0.2s;
+    width: auto;
+}
+
+.password-toggle:hover {
+    color: #667eea;
+    transform: none;
+    background: none;
+}
+
+.password-toggle svg {
+    width: 20px;
+    height: 20px;
+}
