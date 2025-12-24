@@ -133,6 +133,11 @@ app.get('/admin-panel', passportCall('jwt'), authorization('admin'), (req, res) 
     res.render('adminPanel', { user: req.user });
 });
 
+/* ===== Admin Products CRUD (solo admin) ===== */
+app.get('/admin-products', passportCall('jwt'), authorization('admin'), (req, res) => {
+    res.render('adminProducts', { user: req.user });
+});
+
 /* ===== Vista de carrito (solo user) ===== */
 app.get('/my-cart', passportCall('jwt'), authorization('user'), (req, res) => {
     res.render('cart', { user: req.user });
