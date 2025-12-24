@@ -28,6 +28,7 @@ import productsApiRouter from './routes/products.api.js';
 import cartsApiRouter from './routes/carts.api.js';
 import mailApiRouter from './routes/mail.api.js';
 import passwordResetApiRouter from './routes/passwordReset.api.js';
+import ticketsApiRouter from './routes/tickets.api.js';
 
 // Rutas de vistas
 import usersViewsRoutes from './routes/users.views.js'; // Vistas Handlebars
@@ -113,6 +114,7 @@ app.use('/api/products', productsApiRouter); // Products API
 app.use('/api/carts', cartsApiRouter); // Carts API
 app.use('/api/mail', mailApiRouter); // Mail API (test)
 app.use('/api/password-reset', passwordResetApiRouter); // Password Reset API (público)
+app.use('/api/tickets', ticketsApiRouter); // Tickets API (user)
 app.use('/private', protectedRoutes); // Rutas protegidas
 app.use('/api/advanced', advancedRoutes); // Custom Router
 app.use('/api/pets', petsRoutes); // Router.param + regex
@@ -134,6 +136,11 @@ app.get('/admin-panel', passportCall('jwt'), authorization('admin'), (req, res) 
 /* ===== Vista de carrito (solo user) ===== */
 app.get('/my-cart', passportCall('jwt'), authorization('user'), (req, res) => {
     res.render('cart', { user: req.user });
+});
+
+/* ===== Vista de historial de tickets (solo user) ===== */
+app.get('/my-tickets', passportCall('jwt'), authorization('user'), (req, res) => {
+    res.render('tickets', { user: req.user });
 });
 
 /* ===== 404 explícito ===== */

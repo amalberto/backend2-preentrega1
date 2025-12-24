@@ -19,6 +19,9 @@
     <div class="actions">
         {{#if (eq user.role "admin")}}
             <a href="/admin-panel" class="btn btn-warning">🛠 Panel Admin</a>
+        {{else}}
+            <a href="/my-cart" class="btn btn-primary">🛒 Mi Carrito</a>
+            <a href="/my-tickets" class="btn btn-secondary">🧾 Mis Compras</a>
         {{/if}}
         <a href="/products" class="btn btn-primary">🛒 Ver Productos</a>
     </div>
