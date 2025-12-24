@@ -2,16 +2,29 @@
     <h1>Productos</h1>
     <h2>Backend2 - Catálogo</h2>
     
-    <div class="nav-links">
+    {{#if user}}
+    <div class="user-greeting">
+        <span class="greeting-text">Hola, <strong>{{user.first_name}}</strong></span>
+    </div>
+    {{/if}}
+    
+    <div class="nav-buttons">
         {{#if user}}
-            <span>Hola, {{user.first_name}}</span> |
-            <a href="/users/current">Mi Perfil</a> |
+            <a href="/users/current" class="btn-nav btn-profile">👤 Mi Perfil</a>
+            {{#if (eq user.role "user")}}
+            <button id="go-to-cart-btn" class="btn-nav btn-cart" disabled title="Cargando...">
+                🛒 Ir al carrito
+            </button>
+            {{/if}}
+            {{#if (eq user.role "admin")}}
+            <a href="/admin-panel" class="btn-nav btn-admin">🛠️ Admin Panel</a>
+            {{/if}}
             <form action="/api/users/logout" method="POST" style="display:inline; margin:0;">
-                <button type="submit" class="logout-btn">Cerrar Sesión</button>
+                <button type="submit" class="btn-nav btn-logout">🚪 Cerrar Sesión</button>
             </form>
         {{else}}
-            <a href="/users/login">Iniciar Sesión</a> |
-            <a href="/users/register">Registrarse</a>
+            <a href="/users/login" class="btn-nav btn-login">🔑 Iniciar Sesión</a>
+            <a href="/users/register" class="btn-nav btn-register">📝 Registrarse</a>
         {{/if}}
     </div>
 

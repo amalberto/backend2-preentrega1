@@ -181,6 +181,58 @@ class ProductService {
         }
         return product;
     }
+
+    /**
+     * Obtener cantidades reservadas en carritos por producto
+     * Retorna un mapa { productId: cantidadReservada }
+     * @returns {Promise<Object>}
+     */
+    async getReservedStock() {
+        const Cart = mongoose.model('Cart');
+        
+        // Aggregate para sumar cantidades por producto en todos los carritos
+        const reserved = await Cart.aggregate([
+            { $unwind: '$products' },
+            { 
+                $group: {
+                    _id: '$products.product',
+                    reservedQty: { $sum: '$products.quantity' }
+                }
+            }
+        ]);
+
+        // Convertir a mapa { productId: qty }
+        const reservedMap = {};
+        reserved.forEach(item => {
+            reservedMap[item._id.toString()] = item.reservedQty;
+        });
+
+        return reservedMap;
+    }
+
+    /**
+     * Obtener productos con stock disponible (stock - reservado en carritos)
+     * @param {Object} params - Parámetros de búsqueda (igual que getAll)
+     * @returns {Promise<Object>} - Resultado con availableStock añadido
+     */
+    async getAllWithAvailableStock(params = {}) {
+        // Obtener productos y stock reservado en paralelo
+        const [result, reservedMap] = await Promise.all([
+            this.getAll(params),
+            this.getReservedStock()
+        ]);
+
+        // Añadir availableStock a cada producto
+        result.payload = result.payload.map(product => {
+            const prod = product.toObject ? product.toObject() : { ...product };
+            const reserved = reservedMap[prod._id.toString()] || 0;
+            prod.availableStock = Math.max(0, prod.stock - reserved);
+            prod.reservedStock = reserved;
+            return prod;
+        });
+
+        return result;
+    }
 }
 
 // Exportar instancia singleton

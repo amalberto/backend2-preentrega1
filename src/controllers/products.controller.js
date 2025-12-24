@@ -9,10 +9,11 @@ class ProductController {
     /**
      * GET /api/products
      * Listar productos con paginación
+     * Query param: ?withAvailableStock=true para incluir stock disponible real
      */
     async getAll(req, res, next) {
         try {
-            const { limit, page, sort, category, status } = req.query;
+            const { limit, page, sort, category, status, withAvailableStock } = req.query;
             
             // Parsear status si viene como string
             const parsedStatus = status === 'true' ? true : 
@@ -22,14 +23,19 @@ class ProductController {
             // Base URL para construir links de paginación
             const baseUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}`;
 
-            const result = await productService.getAll({
+            const params = {
                 limit,
                 page,
                 sort,
                 category,
                 status: parsedStatus,
                 baseUrl
-            });
+            };
+
+            // Usar método con stock disponible si se solicita
+            const result = withAvailableStock === 'true' 
+                ? await productService.getAllWithAvailableStock(params)
+                : await productService.getAll(params);
 
             res.json(result);
         } catch (error) {
