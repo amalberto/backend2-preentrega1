@@ -82,43 +82,58 @@ RESET_PASSWORD_URL_BASE=http://localhost:3000
 
 ## 🔐 Autenticación y Autorización
 
+### Dos familias de endpoints de Auth
+
+Este proyecto tiene **dos conjuntos de endpoints** para autenticación:
+
+| Familia | Base URL | Respuestas | Uso recomendado |
+|---------|----------|------------|-----------------|
+| **Users** | `/api/users/*` | Redirects (302) | Vistas Handlebars, formularios HTML |
+| **Sessions** | `/api/sessions/*` | JSON puro | API REST, fetch desde JS, Postman |
+
+> 📌 **Para consumir como API JSON**, usá `/api/sessions/*`. Los endpoints `/api/users/*` hacen redirects pensados para navegación con vistas.
+
 ### Roles
 | Rol | Permisos |
 |-----|----------|
 | `user` | Ver productos, agregar al carrito, **comprar (purchase)** |
-| `admin` | Ver productos, **CRUD productos**, ver usuarios, enviar mails de prueba |
+| `admin` | Ver productos, **CRUD productos**, ver usuarios/tickets/carritos, enviar mails de prueba |
 
 > ⚠️ **Importante**: Solo `user` puede agregar productos al carrito y realizar compras. El `admin` no puede comprar, solo gestionar el catálogo.
 
 ### JWT
 - Token en cookie HTTP-only firmada (`currentUser`)
-- Expiración: 24h (vía `/api/users/login`)
+- Expiración: 24h
 - Estrategias Passport: `jwt`, `current`
+- **En fetch**: usar `credentials: 'include'` para enviar la cookie
 
 ---
 
 ## 📚 Endpoints
 
-### Sesiones (`/api/sessions`)
+### Sesiones (`/api/sessions`) - API JSON
+
+> ✅ **Usar estos endpoints para consumo programático (fetch, Postman, etc.)**
 
 | Método | Endpoint | Auth | Descripción |
 |--------|----------|------|-------------|
-| POST | `/register` | - | Registrar usuario |
-| POST | `/login` | - | Login con sesión |
-| GET | `/current` | JWT | Usuario actual (canónico) |
-| GET | `/me` | Session | Datos de sesión |
-| POST | `/logout` | Session | Cerrar sesión |
+| POST | `/register` | - | Registrar usuario → JSON |
+| POST | `/login` | - | Login → JSON con datos de usuario |
+| GET | `/current` | JWT | Usuario actual → JSON |
+| POST | `/logout` | JWT | Cerrar sesión → JSON |
 
-### Usuarios (`/api/users`)
+### Usuarios (`/api/users`) - Vistas/Redirects
+
+> ⚠️ **Estos endpoints hacen redirects (302), pensados para formularios HTML**
 
 | Método | Endpoint | Auth | Rol | Descripción |
 |--------|----------|------|-----|-------------|
-| POST | `/register` | - | - | Registrar usuario |
-| POST | `/login` | - | - | Login con JWT en cookie |
-| POST | `/logout` | - | - | Limpiar cookie |
-| GET | `/current` | JWT | - | Usuario actual (DTO seguro) |
-| GET | `/` | JWT | admin | Listar usuarios |
-| DELETE | `/:id` | JWT | admin | Eliminar usuario |
+| POST | `/register` | - | - | Registrar → redirect a login |
+| POST | `/login` | - | - | Login → redirect a /users/current |
+| POST | `/logout` | - | - | Logout → redirect a login |
+| GET | `/current` | JWT | - | Usuario actual (DTO seguro) → JSON |
+| GET | `/` | JWT | admin | Listar usuarios → JSON |
+| DELETE | `/:id` | JWT | admin | Eliminar usuario → JSON |
 
 ### Productos (`/api/products`)
 
@@ -232,6 +247,23 @@ src/
 ```
 Request → Router → Controller → Service → Repository → DAO → Model → MongoDB
 ```
+
+---
+
+## 📊 Códigos de Respuesta HTTP Comunes
+
+| Código | Significado | Cuándo ocurre |
+|--------|-------------|---------------|
+| `200` | OK | Request exitoso |
+| `201` | Created | Recurso creado (POST exitoso) |
+| `302` | Redirect | Endpoints `/api/users/*` redirigen después de login/logout |
+| `304` | Not Modified | Cache del navegador (ETag), no es error |
+| `400` | Bad Request | Datos inválidos o faltantes |
+| `401` | Unauthorized | Sin sesión JWT o token inválido |
+| `403` | Forbidden | Rol sin permisos para la acción |
+| `404` | Not Found | Recurso no existe |
+
+> 💡 **Tip**: Si ves `401` en `/api/users/current` al cargar la página, es normal si no hay sesión. Una vez logueado, asegurate de usar `credentials: 'include'` en fetch.
 
 ---
 
