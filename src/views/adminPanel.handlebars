@@ -2,7 +2,15 @@
     <h1>🛠 Panel de Administración</h1>
     <h2>Bienvenido, {{user.first_name}}</h2>
 
-    <div class="admin-section">
+    <!-- Tabs de navegación -->
+    <div class="admin-tabs">
+        <button class="tab-btn active" data-tab="mail">📧 Mail</button>
+        <button class="tab-btn" data-tab="tickets">🎫 Tickets</button>
+        <button class="tab-btn" data-tab="carts">🛒 Carritos</button>
+    </div>
+
+    <!-- Tab: Mail -->
+    <div class="admin-section tab-content" id="tab-mail">
         <h3>📧 Configuración de Mail</h3>
         
         <div class="mail-checks">
@@ -21,6 +29,28 @@
                 <button type="submit" class="btn btn-primary">Enviar Test</button>
             </form>
             <div id="mailResult" class="result"></div>
+        </div>
+    </div>
+
+    <!-- Tab: Tickets -->
+    <div class="admin-section tab-content hidden" id="tab-tickets">
+        <h3>🎫 Tickets de Compra</h3>
+        <div class="filter-section">
+            <input type="text" id="ticketFilter" placeholder="Filtrar por email..." class="filter-input">
+        </div>
+        <div id="ticketsList" class="admin-list">
+            <p class="loading">Cargando tickets...</p>
+        </div>
+    </div>
+
+    <!-- Tab: Carritos -->
+    <div class="admin-section tab-content hidden" id="tab-carts">
+        <h3>🛒 Carritos Activos</h3>
+        <div class="filter-section">
+            <input type="text" id="cartFilter" placeholder="Filtrar por email..." class="filter-input">
+        </div>
+        <div id="cartsList" class="admin-list">
+            <p class="loading">Cargando carritos...</p>
         </div>
     </div>
 

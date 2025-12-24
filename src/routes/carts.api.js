@@ -7,6 +7,16 @@ import { authorization } from '../middlewares/authorization.js';
 const router = Router();
 
 /**
+ * GET /api/carts/admin/all
+ * Obtener todos los carritos con info de usuario (solo admin)
+ */
+router.get('/admin/all',
+    passportCall('current'),
+    authorization('admin'),
+    cartController.getAllAdmin.bind(cartController)
+);
+
+/**
  * GET /api/carts/mine
  * Obtener o crear el carrito del usuario autenticado
  */

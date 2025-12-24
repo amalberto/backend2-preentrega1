@@ -7,6 +7,23 @@ import cartService from '../services/carts.service.js';
  */
 class CartController {
     /**
+     * GET /api/carts/admin/all
+     * [ADMIN] Obtener todos los carritos con info de usuarios
+     */
+    async getAllAdmin(req, res, next) {
+        try {
+            const carts = await cartService.getAllForAdmin();
+            
+            res.json({
+                status: 'success',
+                payload: carts
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
      * POST /api/carts
      * Crear carrito vacío
      */
