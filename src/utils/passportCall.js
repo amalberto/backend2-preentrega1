@@ -22,7 +22,6 @@ export const passportCall = (strategy) => {
             // Token ausente, corrupto o expirado
             if (!user) {
                 const message = info?.message || 'No autenticado';
-                console.log(`[PASSPORT CALL] Sin usuario en '${strategy}':`, message);
                 
                 // Mensajes más descriptivos
                 if (message.includes('No auth token')) {
@@ -51,12 +50,6 @@ export const passportCall = (strategy) => {
             
             // Todo OK - asignar usuario a req
             req.user = user;
-            console.log(`[PASSPORT CALL] Usuario autenticado:`, {
-                id: user._id || user.id,
-                email: user.email,
-                role: user.role
-            });
-            
             next();
         })(req, res, next);
     };

@@ -74,35 +74,26 @@ router.post('/register', async (req, res, next) => {
  *   - Setea req.session.user con un objeto mínimo (tu contrato actual)
  */
 router.post('/login', (req, res, next) => {
-    console.log('[LOGIN] req', { email: req.body?.email });
-
     passport.authenticate('local', (err, user, info) => {
         if (err) {
-            console.log('[LOGIN] error', { message: err.message });
             return next(err);
         }
 
         if (!user) {
-            console.log('[LOGIN] 401 (credenciales invalidas)');
             return res.status(401).json({ error: 'Credenciales invalidas' });
         }
 
         // Seguridad: evitar session fixation → regenerar el id de sesión
         req.session.regenerate(err2 => {
             if (err2) {
-                console.log('[LOGIN] regen error', { message: err2.message });
                 return next(err2);
             }
-            console.log('[LOGIN] session_regenerated', { sid: req.sessionID });
 
             // Integracion Passport <-> Sesion (crea req.user)
             req.login(user, err3 => {
                 if (err3) {
-                    console.log('[LOGIN] req.login error', { message: err3.message });
                     return next(err3);
                 }
-
-                console.log('[LOGIN] req.user listo', { email: req.user?.email, role: req.user?.role });
 
                 // Tu contrato minimalista (lo que consumen tus rutas actuales) via sesión
                 req.session.user = {
@@ -112,8 +103,6 @@ router.post('/login', (req, res, next) => {
                     last_name: user.last_name,
                     role: user.role || 'user'
                 };
-
-                console.log('[LOGIN] session.user setado', req.session.user);
 
                 // ====== JWT sencillo ======
                 const jwtSecret = process.env.JWT_SECRET || 'dev_jwt_secret';
@@ -126,8 +115,6 @@ router.post('/login', (req, res, next) => {
                     jwtSecret,
                     { expiresIn: '1h' }
                 );
-
-                console.log('[LOGIN] jwt generado');
 
                 // Ahora devolvemos ok + token (además de dejar la sesión lista)
                 return res.json({ ok: true, token });

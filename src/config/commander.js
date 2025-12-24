@@ -15,6 +15,4 @@ program.parse();
 
 const options = program.opts();
 
-console.log('[COMMANDER] Opciones CLI:', options);
-
 export default options;

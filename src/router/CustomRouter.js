@@ -84,7 +84,6 @@ export default class CustomRouter {
 
                 next();
             } catch (err) {
-                console.log('[POLICY] JWT error:', err.message);
                 return res.status(401).json({
                     status: 'error',
                     error: 'Token inválido o expirado'

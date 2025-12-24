@@ -1,10 +1,5 @@
-docs/
+# Dependencias y archivos de entorno
 node_modules/
 .env
 
-# Archivos temporales de pruebas
-cookies.txt
-session.xml
 
-# Plan de fixes (interno)
-fixes_roadmap.md

@@ -60,12 +60,6 @@ router.post('/register', async (req, res, next) => {
             await cartService.ensureUserCart(user);
         }
         
-        console.log('[REGISTER] Usuario creado:', {
-            id: user._id,
-            email: user.email,
-            role: user.role
-        });
-        
         res.status(201).json({
             ok: true,
             message: 'Usuario registrado exitosamente',
@@ -92,8 +86,6 @@ router.post('/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
         
-        console.log('[LOGIN API] Intento de login:', { email });
-        
         // Validación básica
         if (!email || !password) {
             // Si viene desde formulario HTML, redirigir con error
@@ -110,7 +102,6 @@ router.post('/login', async (req, res, next) => {
         const user = await User.findOne({ email: normEmail });
         
         if (!user) {
-            console.log('[LOGIN API] Usuario no encontrado:', normEmail);
             if (req.get('Content-Type')?.includes('application/x-www-form-urlencoded')) {
                 return res.redirect('/users/login?error=1');
             }
@@ -121,7 +112,6 @@ router.post('/login', async (req, res, next) => {
         const isValid = await user.comparePassword(password);
         
         if (!isValid) {
-            console.log('[LOGIN API] Password incorrecto');
             if (req.get('Content-Type')?.includes('application/x-www-form-urlencoded')) {
                 return res.redirect('/users/login?error=1');
             }
@@ -144,8 +134,6 @@ router.post('/login', async (req, res, next) => {
             { expiresIn: '24h' }
         );
         
-        console.log('[LOGIN API] JWT generado para:', user.email);
-        
         // Guardar en cookie HTTP-only firmada 'currentUser'
         res.cookie('currentUser', token, {
             httpOnly: true,
@@ -154,8 +142,6 @@ router.post('/login', async (req, res, next) => {
             sameSite: 'lax',
             secure: false // true en producción con HTTPS
         });
-        
-        console.log('[LOGIN API] Cookie currentUser seteada');
         
         // Si viene desde formulario, redirigir a /users/current
         if (req.get('Content-Type')?.includes('application/x-www-form-urlencoded')) {
@@ -202,7 +188,6 @@ router.get('/current', passportCall('current'), (req, res) => {
  */
 router.post('/logout', (req, res) => {
     res.clearCookie('currentUser');
-    console.log('[LOGOUT] Cookie limpiada');
     
     // Si viene desde formulario, redirigir a login
     if (req.get('Content-Type')?.includes('application/x-www-form-urlencoded')) {

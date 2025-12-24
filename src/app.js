@@ -87,7 +87,6 @@ app.get('/products', async (req, res) => {
             }
         } catch (err) {
             // Token inválido o expirado, user queda null
-            console.log('[PRODUCTS] Token error:', err.message);
         }
     }
     
@@ -138,13 +137,27 @@ app.use('/api/tickets', ticketsApiRouter); // Tickets API (user)
 import { passportCall } from './utils/passportCall.js';
 import { authorization } from './middlewares/authorization.js';
 
-app.get('/admin-panel', passportCall('jwt'), authorization('admin'), (req, res) => {
-    res.render('adminPanel', { user: req.user });
+app.get('/admin-panel', passportCall('jwt'), authorization('admin'), async (req, res) => {
+    // Buscar usuario completo en BD para obtener first_name
+    const userDoc = await User.findById(req.user.id).lean();
+    const user = userDoc ? {
+        first_name: userDoc.first_name,
+        email: userDoc.email,
+        role: userDoc.role
+    } : req.user;
+    res.render('adminPanel', { user });
 });
 
 /* ===== Admin Products CRUD (solo admin) ===== */
-app.get('/admin-products', passportCall('jwt'), authorization('admin'), (req, res) => {
-    res.render('adminProducts', { user: req.user });
+app.get('/admin-products', passportCall('jwt'), authorization('admin'), async (req, res) => {
+    // Buscar usuario completo en BD para obtener first_name
+    const userDoc = await User.findById(req.user.id).lean();
+    const user = userDoc ? {
+        first_name: userDoc.first_name,
+        email: userDoc.email,
+        role: userDoc.role
+    } : req.user;
+    res.render('adminProducts', { user });
 });
 
 /* ===== Vista de carrito (solo user) ===== */

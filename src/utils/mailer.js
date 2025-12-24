@@ -126,13 +126,6 @@ export const sendMail = async ({ to, subject, html, text }) => {
         };
 
         const result = await transport.sendMail(mailOptions);
-        
-        console.log('[MAILER] Email enviado:', {
-            to,
-            subject,
-            messageId: result.messageId
-        });
-
         return result;
     } catch (err) {
         console.error('[MAILER] Error enviando email:', err.message);

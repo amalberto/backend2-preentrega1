@@ -37,7 +37,6 @@ export const requestPasswordReset = async (email) => {
 
     // Validar formato de email
     if (!isValidEmail(normalizedEmail)) {
-        console.log(`[PASSWORD_RESET] Email inválido: ${email}`);
         // Por seguridad, misma respuesta que si no existe
         return { 
             success: true, 
@@ -50,7 +49,6 @@ export const requestPasswordReset = async (email) => {
     
     // Por seguridad, siempre respondemos igual (no revelar si email existe)
     if (!user) {
-        console.log(`[PASSWORD_RESET] Email no encontrado: ${normalizedEmail}`);
         return { 
             success: true, 
             message: 'Si el email existe, recibirás un correo con instrucciones' 
@@ -120,8 +118,6 @@ export const requestPasswordReset = async (email) => {
                 </div>
             `
         });
-
-        console.log(`[PASSWORD_RESET] Email enviado a: ${user.email}`);
     } catch (err) {
         console.error('[PASSWORD_RESET] Error enviando email:', err.message);
         
@@ -129,8 +125,6 @@ export const requestPasswordReset = async (email) => {
         user.passwordResetTokenHash = null;
         user.passwordResetExpiresAt = null;
         await user.save();
-        
-        console.log(`[PASSWORD_RESET] Token limpiado por fallo de envío para: ${user.email}`);
         // No revelamos el error al usuario por seguridad
     }
 
@@ -198,8 +192,6 @@ export const confirmPasswordReset = async (email, token, newPassword) => {
     user.passwordResetTokenHash = null;
     user.passwordResetExpiresAt = null;
     await user.save();
-
-    console.log(`[PASSWORD_RESET] Contraseña actualizada para: ${user.email}`);
 
     return { 
         success: true, 

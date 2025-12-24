@@ -24,25 +24,12 @@ const jwtOptions = {
  */
 const jwtCallback = async (jwt_payload, done) => {
     try {
-        console.log('[PASSPORT JWT] Verificando token:', {
-            userId: jwt_payload.id,
-            email: jwt_payload.email,
-            exp: new Date(jwt_payload.exp * 1000).toISOString()
-        });
-        
         // Buscar usuario por ID del payload (SIN password)
         const user = await User.findById(jwt_payload.id).select('-password');
         
         if (!user) {
-            console.log('[PASSPORT JWT] Usuario no encontrado:', jwt_payload.id);
             return done(null, false, { message: 'User not found' });
         }
-        
-        console.log('[PASSPORT JWT] Usuario encontrado:', {
-            id: user._id,
-            email: user.email,
-            role: user.role
-        });
         
         // Devolver usuario (se asignará a req.user)
         return done(null, user);

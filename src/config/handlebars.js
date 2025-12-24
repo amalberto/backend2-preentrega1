@@ -35,6 +35,4 @@ export function configureHandlebars(app) {
     
     app.set('view engine', 'handlebars');
     app.set('views', path.join(__dirname, '../views'));
-    
-    console.log('[HANDLEBARS] ✓ Motor de plantillas configurado');
 }

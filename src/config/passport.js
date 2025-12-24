@@ -37,22 +37,18 @@ passport.use(
         { usernameField: 'email', passwordField: 'password' },
         async (email, password, done) => {
             try {
-                console.log('[PASS] intento', { email });
                 const normEmail = String(email).toLowerCase().trim();
 
                 const user = await User.findOne({ email: normEmail });
                 if (!user) {
-                    console.log('[PASS] fail', { reason: 'email_not_found', email: normEmail });
                     return done(null, false);
                 }
 
                 const ok = await user.comparePassword(password);
                 if (!ok) {
-                    console.log('[PASS] fail', { reason: 'bad_password', email: normEmail });
                     return done(null, false);
                 }
 
-                console.log('[PASS] ok', { id: user._id.toString(), email: user.email, role: user.role });
                 return done(null, user);
             } catch (err) {
                 return done(err);
