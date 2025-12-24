@@ -501,3 +501,42 @@ button:active {
     font-weight: 600;
     margin-top: 20px;
 }
+
+/* ===== Purchase Result ===== */
+.purchase-result {
+    margin: 20px 0;
+    padding: 20px;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.ticket-success {
+    background: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+    margin-bottom: 15px;
+}
+
+.ticket-success h3 {
+    margin-top: 0;
+    color: #155724;
+}
+
+.unprocessed-warning {
+    background: #fff3cd;
+    color: #856404;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.unprocessed-warning h4 {
+    margin-top: 0;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    color: white;
+}

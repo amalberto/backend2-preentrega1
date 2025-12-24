@@ -76,5 +76,69 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.location.href = '/products';
   });
 
+  // Handler de Finalizar compra
+  document.getElementById('purchaseBtn').addEventListener('click', async () => {
+    const resultDiv = document.getElementById('purchase-result');
+    resultDiv.hidden = false;
+    resultDiv.innerHTML = '<p>⏳ Procesando compra...</p>';
+    resultDiv.className = 'purchase-result';
+
+    try {
+      const res = await fetch(`/api/carts/${cartId}/purchase`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        resultDiv.innerHTML = `<div class="error">❌ ${data.error || data.message || 'Error al procesar compra'}</div>`;
+        return;
+      }
+
+      const { ticket, unprocessedProducts } = data.payload;
+      let html = '';
+
+      // Mostrar ticket si existe
+      if (ticket) {
+        html += `
+          <div class="ticket-success">
+            <h3>✅ ¡Compra realizada!</h3>
+            <p><strong>Código:</strong> ${ticket.code}</p>
+            <p><strong>Total:</strong> $${ticket.amount.toFixed(2)}</p>
+            <p><strong>Fecha:</strong> ${new Date(ticket.purchase_datetime).toLocaleString()}</p>
+            <p><strong>Email:</strong> ${ticket.purchaser}</p>
+          </div>
+        `;
+      }
+
+      // Mostrar productos no procesados
+      if (unprocessedProducts?.length > 0) {
+        html += `
+          <div class="unprocessed-warning">
+            <h4>⚠️ Productos sin stock suficiente:</h4>
+            <p>Los siguientes productos quedaron en tu carrito:</p>
+            <ul>
+              ${unprocessedProducts.map(pid => `<li>${pid}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
+
+      // Si no hay ticket ni unprocessed (carrito vacío)
+      if (!ticket && (!unprocessedProducts || unprocessedProducts.length === 0)) {
+        html = '<div class="error">El carrito está vacío</div>';
+      }
+
+      resultDiv.innerHTML = html;
+
+      // Recargar carrito (mostrará items restantes o vacío)
+      await loadCart();
+
+    } catch (err) {
+      resultDiv.innerHTML = `<div class="error">❌ Error de conexión: ${err.message}</div>`;
+    }
+  });
+
   await loadCart();
 });
