@@ -1,9 +1,9 @@
 // src/models/Cart.js
 import mongoose from 'mongoose';
+import config from '../config/environment.js';
 
-// Tiempo de expiración del carrito
-// TODO: Cambiar a 4 horas para producción (4 * 60 * 60)
-const CART_TTL_MINUTES = 2; // 2 minutos para pruebas
+// Tiempo de expiración del carrito (desde env o default 60 min)
+const CART_TTL_MINUTES = config.CART_TTL_MINUTES;
 const CART_TTL_SECONDS = CART_TTL_MINUTES * 60;
 
 const cartItemSchema = new mongoose.Schema({

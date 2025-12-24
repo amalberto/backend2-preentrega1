@@ -24,5 +24,8 @@ export default {
     
     // Password Reset configuration
     RESET_PASSWORD_TTL_MINUTES: process.env.RESET_PASSWORD_TTL_MINUTES || '60',
-    RESET_PASSWORD_URL_BASE: process.env.RESET_PASSWORD_URL_BASE || 'http://localhost:3000'
+    RESET_PASSWORD_URL_BASE: process.env.RESET_PASSWORD_URL_BASE || 'http://localhost:3000',
+    
+    // Cart TTL (tiempo de expiración del carrito en minutos)
+    CART_TTL_MINUTES: parseInt(process.env.CART_TTL_MINUTES) || 60
 };

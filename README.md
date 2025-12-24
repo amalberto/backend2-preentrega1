@@ -74,6 +74,9 @@ MAIL_FROM_NAME=Backend2 App
 # === PASSWORD RESET ===
 RESET_PASSWORD_TTL_MINUTES=60
 RESET_PASSWORD_URL_BASE=http://localhost:3000
+
+# === CART ===
+CART_TTL_MINUTES=60
 ```
 
 > **Gmail**: Requiere 2FA + App Password. [Crear aquí](https://myaccount.google.com/apppasswords)
@@ -170,7 +173,7 @@ Este proyecto tiene **dos conjuntos de endpoints** para autenticación:
 | DELETE | `/:cid` | JWT | user | Vaciar carrito |
 | POST | `/:cid/purchase` | JWT | user | **Finalizar compra** |
 
-> **TTL del Carrito**: Los carritos expiran automáticamente después de un tiempo de inactividad (configurable). Cada operación en el carrito renueva el tiempo de expiración. Un timer visual en la UI muestra el tiempo restante.
+> **TTL del Carrito**: Los carritos expiran automáticamente después de `CART_TTL_MINUTES` minutos de inactividad (default: 60 min, configurable en `.env`). Cada operación en el carrito renueva el tiempo de expiración. Un timer visual en la UI muestra el tiempo restante.
 
 ### Tickets (`/api/tickets`)
 
