@@ -4,6 +4,7 @@ import cartRepository from '../repositories/carts.repository.js';
 import productRepository from '../repositories/products.repository.js';
 import ticketService from './tickets.service.js';
 import User from '../models/User.js';
+import { CART_EXPIRATION_MINUTES } from '../models/Cart.js';
 
 /**
  * Helper: extraer ID de producto de un item del carrito
@@ -32,6 +33,7 @@ class CartService {
      * Asegurar que un usuario tenga un carrito asociado.
      * - Si user.cart existe pero el carrito no existe, crea uno nuevo.
      * - Solo aplica para rol "user".
+     * - Si el carrito expiró (TTL), crea uno nuevo automáticamente.
      *
      * @param {Object} user - Usuario autenticado (req.user)
      * @returns {Promise<Object>} - Carrito (doc lean)
@@ -50,13 +52,15 @@ class CartService {
             throw error;
         }
 
-        // Si ya tiene cart y existe, devolvemos.
+        // Si ya tiene cart y existe (no expiró), devolvemos.
         if (user.cart) {
             const existing = await this.repository.getById(user.cart);
             if (existing) return existing;
+            // Si llegamos aquí, el carrito expiró (TTL lo eliminó)
+            // Continuamos para crear uno nuevo
         }
 
-        // Crear carrito y asociarlo al user.
+        // Crear carrito nuevo y asociarlo al user.
         const created = await this.repository.create({ products: [] });
         const cartId = created?._id;
 
@@ -70,6 +74,42 @@ class CartService {
         }
 
         return created;
+    }
+
+    /**
+     * Obtener tiempo de expiración configurado
+     * @returns {number} - Minutos de expiración
+     */
+    getExpirationMinutes() {
+        return CART_EXPIRATION_MINUTES;
+    }
+
+    /**
+     * [ADMIN] Obtener todos los carritos con info de usuario
+     * Solo muestra carritos que tengan productos
+     * @returns {Promise<Array>}
+     */
+    async getAllForAdmin() {
+        // Obtener todos los usuarios con carrito asociado
+        const usersWithCarts = await User.find({ cart: { $ne: null } })
+            .populate({
+                path: 'cart',
+                populate: { path: 'products.product' }
+            })
+            .lean();
+
+        // Formatear resultado para el admin (solo carritos con productos)
+        return usersWithCarts
+            .filter(u => u.cart && u.cart.products && u.cart.products.length > 0)
+            .map(u => ({
+                user: {
+                    _id: u._id,
+                    email: u.email,
+                    first_name: u.first_name,
+                    last_name: u.last_name
+                },
+                cart: u.cart
+            }));
     }
 
     /**
@@ -393,7 +433,14 @@ class CartService {
         if (processedItems.length > 0) {
             ticket = await ticketService.create({
                 amount,
-                purchaser: user.email
+                purchaser: user.email,
+                // Guardar snapshot de productos comprados
+                products: processedItems.map(item => ({
+                    product: item.product,
+                    title: item.title,
+                    price: item.price,
+                    quantity: item.quantity
+                }))
             });
         }
 

@@ -1,6 +1,14 @@
 // src/dao/mongo/carts.dao.js
 import BaseMongoDAO from './BaseMongoDAO.js';
-import Cart from '../../models/Cart.js';
+import Cart, { CART_EXPIRATION_MINUTES } from '../../models/Cart.js';
+
+// TTL en milisegundos para renovar expiración
+const CART_TTL_MS = CART_EXPIRATION_MINUTES * 60 * 1000;
+
+/**
+ * Helper: calcular nueva fecha de expiración
+ */
+const newExpiresAt = () => new Date(Date.now() + CART_TTL_MS);
 
 /**
  * CartDAO
@@ -23,6 +31,7 @@ class CartDAO extends BaseMongoDAO {
     /**
      * Agregar producto al carrito
      * Si el producto ya existe, incrementa quantity
+     * Renueva la expiración del carrito
      * @param {string} cartId - ID del carrito
      * @param {string} productId - ID del producto
      * @param {number} quantity - Cantidad a agregar
@@ -45,12 +54,16 @@ class CartDAO extends BaseMongoDAO {
             cart.products.push({ product: productId, quantity });
         }
 
+        // Renovar expiración
+        cart.expiresAt = newExpiresAt();
+
         await cart.save();
         return cart.toObject();
     }
 
     /**
      * Actualizar cantidad de un producto en el carrito
+     * Renueva la expiración del carrito
      * @param {string} cartId - ID del carrito
      * @param {string} productId - ID del producto
      * @param {number} quantity - Nueva cantidad
@@ -59,7 +72,12 @@ class CartDAO extends BaseMongoDAO {
     async updateProductQuantity(cartId, productId, quantity) {
         const cart = await this.model.findOneAndUpdate(
             { _id: cartId, 'products.product': productId },
-            { $set: { 'products.$.quantity': quantity } },
+            { 
+                $set: { 
+                    'products.$.quantity': quantity,
+                    expiresAt: newExpiresAt()
+                } 
+            },
             { new: true, runValidators: true }
         );
         return cart ? cart.toObject() : null;
@@ -67,6 +85,7 @@ class CartDAO extends BaseMongoDAO {
 
     /**
      * Eliminar producto del carrito
+     * Renueva la expiración del carrito
      * @param {string} cartId - ID del carrito
      * @param {string} productId - ID del producto
      * @returns {Promise<Object|null>}
@@ -74,7 +93,10 @@ class CartDAO extends BaseMongoDAO {
     async removeProduct(cartId, productId) {
         const cart = await this.model.findByIdAndUpdate(
             cartId,
-            { $pull: { products: { product: productId } } },
+            { 
+                $pull: { products: { product: productId } },
+                $set: { expiresAt: newExpiresAt() }
+            },
             { new: true }
         );
         return cart ? cart.toObject() : null;
@@ -82,13 +104,19 @@ class CartDAO extends BaseMongoDAO {
 
     /**
      * Vaciar carrito
+     * Renueva la expiración del carrito
      * @param {string} cartId - ID del carrito
      * @returns {Promise<Object|null>}
      */
     async clear(cartId) {
         const cart = await this.model.findByIdAndUpdate(
             cartId,
-            { $set: { products: [] } },
+            { 
+                $set: { 
+                    products: [],
+                    expiresAt: newExpiresAt()
+                } 
+            },
             { new: true }
         );
         return cart ? cart.toObject() : null;
