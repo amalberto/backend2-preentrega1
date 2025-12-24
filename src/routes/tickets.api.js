@@ -7,6 +7,27 @@ import { authorization } from '../middlewares/authorization.js';
 const router = Router();
 
 /**
+ * GET /api/tickets/admin/all
+ * Obtener todos los tickets (solo admin)
+ */
+router.get('/admin/all',
+    passportCall('current'),
+    authorization('admin'),
+    async (req, res, next) => {
+        try {
+            const tickets = await ticketService.getAll();
+            
+            res.json({
+                status: 'success',
+                payload: tickets
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+/**
  * GET /api/tickets/mine
  * Obtener historial de tickets del usuario autenticado
  */

@@ -13,11 +13,11 @@ class TicketService {
 
     /**
      * Crear un nuevo ticket
-     * @param {Object} data - Datos del ticket { amount, purchaser }
+     * @param {Object} data - Datos del ticket { amount, purchaser, products }
      * @returns {Promise<Object>}
      */
     async create(data) {
-        const { amount, purchaser } = data;
+        const { amount, purchaser, products } = data;
 
         // Validar amount
         if (typeof amount !== 'number' || amount < 0) {
@@ -34,7 +34,7 @@ class TicketService {
         }
 
         // code y purchase_datetime se generan automáticamente por el modelo
-        return this.repository.create({ amount, purchaser });
+        return this.repository.create({ amount, purchaser, products: products || [] });
     }
 
     /**
@@ -93,6 +93,14 @@ class TicketService {
         }
 
         return this.repository.getByPurchaser(email, options);
+    }
+
+    /**
+     * Obtener todos los tickets (para admin)
+     * @returns {Promise<Array>}
+     */
+    async getAll() {
+        return this.repository.getAll();
     }
 }
 

@@ -42,7 +42,17 @@ const ticketSchema = new mongoose.Schema({
         required: [true, 'El email del comprador es requerido'],
         lowercase: true, // Normaliza a minúsculas
         trim: true
-    }
+    },
+    // Detalle de productos comprados (snapshot al momento de la compra)
+    products: [{
+        product: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product'
+        },
+        title: String,      // Snapshot del título
+        price: Number,      // Snapshot del precio al momento de compra
+        quantity: Number
+    }]
 }, {
     timestamps: true // createdAt/updatedAt para auditoría técnica
 });
