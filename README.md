@@ -1,6 +1,6 @@
 # Backend2 - Entrega Final
 
-Backend con Express, MongoDB, autenticación JWT, autorización por roles, carrito de compras con tickets y mailing.
+Backend con Express, MongoDB, autenticación JWT, autorización por roles, carrito de compras con TTL, stock en tiempo real, tickets con detalle de productos y mailing.
 
 ---
 
@@ -40,7 +40,7 @@ El servidor corre en **http://localhost:3000** por defecto.
 | `/products` | Público | Catálogo de productos |
 | `/my-cart` | User | Carrito de compras |
 | `/my-tickets` | User | Historial de compras |
-| `/admin-panel` | Admin | Panel con checks de mail |
+| `/admin-panel` | Admin | Panel con tabs: Mail, Tickets, Carritos |
 | `/admin-products` | Admin | CRUD de productos |
 | `/forgot-password` | Público | Solicitar reset de password |
 | `/reset-password` | Público | Formulario para nueva contraseña |
@@ -136,13 +136,18 @@ RESET_PASSWORD_URL_BASE=http://localhost:3000
 - `sort` ('asc' | 'desc' por precio)
 - `category` (filtro)
 - `status` (true/false)
+- `withAvailableStock` (true) - Incluye stock disponible en tiempo real
+
+> **Stock Disponible**: Con `withAvailableStock=true`, cada producto incluye `availableStock` que descuenta las unidades reservadas en carritos activos de otros usuarios.
 
 ### Carritos (`/api/carts`)
 
 | Método | Endpoint | Auth | Rol | Descripción |
-|--------|----------|------|-----|-------------|
+|--------|----------|------|-----|-----------|
 | POST | `/` | - | - | Crear carrito vacío |
 | POST | `/mine` | JWT | user | Obtener/crear mi carrito |
+| GET | `/mine` | JWT | user | Obtener mi carrito (incluye `expiresAt`) |
+| GET | `/admin/all` | JWT | admin | Ver todos los carritos activos |
 | GET | `/:cid` | - | - | Ver carrito |
 | POST | `/:cid/products/:pid` | JWT | user | Agregar producto |
 | PUT | `/:cid/products/:pid` | JWT | user | Modificar cantidad |
@@ -150,12 +155,17 @@ RESET_PASSWORD_URL_BASE=http://localhost:3000
 | DELETE | `/:cid` | JWT | user | Vaciar carrito |
 | POST | `/:cid/purchase` | JWT | user | **Finalizar compra** |
 
+> **TTL del Carrito**: Los carritos expiran automáticamente después de un tiempo de inactividad (configurable). Cada operación en el carrito renueva el tiempo de expiración. Un timer visual en la UI muestra el tiempo restante.
+
 ### Tickets (`/api/tickets`)
 
 | Método | Endpoint | Auth | Rol | Descripción |
-|--------|----------|------|-----|-------------|
-| GET | `/mine` | JWT | user | Historial de compras |
+|--------|----------|------|-----|-----------|
+| GET | `/mine` | JWT | user | Historial de compras (con detalle de productos) |
+| GET | `/admin/all` | JWT | admin | Ver todos los tickets |
 | GET | `/:code` | JWT | user | Detalle de ticket (solo propio) |
+
+> **Detalle de Productos**: Los tickets ahora incluyen un snapshot de los productos comprados (título, precio, cantidad) al momento de la compra.
 
 ### Password Reset (`/api/password-reset`)
 
@@ -342,18 +352,21 @@ Invoke-WebRequest -Uri "http://localhost:3000/api/users/current" -WebSession $se
 
 ### Carrito y Compra (como User)
 - [ ] Agregar producto al carrito desde `/products`
+- [ ] Ver stock disponible (descuenta reservados en otros carritos)
 - [ ] Ver carrito en `/my-cart`
+- [ ] Ver timer de expiración del carrito (colores: azul/amarillo/rojo)
 - [ ] Modificar cantidad (+/-)
 - [ ] Eliminar producto del carrito
 - [ ] Vaciar carrito completo
-- [ ] Finalizar compra → genera ticket
-- [ ] Ver ticket en `/my-tickets`
+- [ ] Finalizar compra → genera ticket con detalle de productos
+- [ ] Ver ticket en `/my-tickets` con detalle expandible
 - [ ] Producto sin stock → queda en carrito como `unprocessedProducts`
 
 ### Admin Panel
-- [ ] Verificar config de mail (botón)
-- [ ] Verificar SMTP (botón)
-- [ ] Enviar mail de prueba
+- [ ] Tab Mail: Verificar config y SMTP, enviar mail de prueba
+- [ ] Tab Tickets: Ver todos los tickets con detalle de productos
+- [ ] Tab Carritos: Ver carritos activos (con productos) por usuario
+- [ ] Filtrar tickets y carritos por email
 
 ### CRUD Productos (como Admin)
 - [ ] Crear producto desde `/admin-products`
