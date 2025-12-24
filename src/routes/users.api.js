@@ -56,7 +56,9 @@ router.post('/register', async (req, res, next) => {
 
         // Asegurar que los usuarios "user" tengan carrito asignado
         // (para que el front no tenga que "adivinar" el cartId)
-        await cartService.ensureUserCart(user);
+        if (user.role === 'user') {
+            await cartService.ensureUserCart(user);
+        }
         
         console.log('[REGISTER] Usuario creado:', {
             id: user._id,
@@ -127,7 +129,9 @@ router.post('/login', async (req, res, next) => {
         }
 
         // Asegurar que los usuarios "user" tengan carrito asignado
-        await cartService.ensureUserCart(user);
+        if (user.role === 'user') {
+            await cartService.ensureUserCart(user);
+        }
         
         // Generar JWT
         const token = jwt.sign(

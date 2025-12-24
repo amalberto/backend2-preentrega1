@@ -470,24 +470,87 @@ button:active {
 
 .cart-item {
     display: grid;
-    grid-template-columns: 2fr 1fr 2fr 1fr auto;
+    grid-template-columns: 2fr 80px 140px 80px 40px;
     align-items: center;
-    gap: 10px;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
+    gap: 12px;
+    padding: 15px 10px;
+    border-bottom: 1px solid #eee;
+    background: #fafafa;
+    margin-bottom: 8px;
+    border-radius: 6px;
+}
+
+.cart-item:hover {
+    background: #f0f0f0;
+}
+
+.item-title {
+    font-weight: 600;
+    color: #333;
+}
+
+.item-price {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.item-subtotal {
+    font-weight: 700;
+    color: #28a745;
 }
 
 .qty-control {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
 }
 
 .qty-btn {
-    background: #eee;
+    width: 36px;
+    height: 36px;
+    background: #f5f5f5;
     border: none;
-    padding: 5px 10px;
+    font-size: 18px;
+    font-weight: bold;
     cursor: pointer;
+    color: #555;
+    transition: background 0.2s;
+}
+
+.qty-btn:hover {
+    background: #667eea;
+    color: white;
+}
+
+.qty-control input {
+    width: 45px;
+    height: 36px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.btn-remove {
+    width: 36px;
+    height: 36px;
+    background: #ffebee;
+    border: 1px solid #ffcdd2;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.btn-remove:hover {
+    background: #ef5350;
+    border-color: #ef5350;
 }
 
 .cart-actions {

@@ -32,6 +32,8 @@ import usersViewsRoutes from './routes/users.views.js'; // Vistas Handlebars
 // Middlewares
 import { createSessionMW } from './config/session.js';
 import errorMW from './middlewares/error.js';
+import jwt from 'jsonwebtoken';
+import User from './models/User.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,12 +67,33 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.use('/users', usersViewsRoutes); // /users/login, /users/current, /users/register
 
 // Vista de productos (pública)
-app.get('/products', (req, res) => {
+app.get('/products', async (req, res) => {
     // Intentar obtener usuario del token si existe
     const token = req.signedCookies?.currentUser;
+    let user = null;
+    
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, config.JWT_SECRET);
+            
+            // Buscar usuario en BD para obtener first_name
+            const userDoc = await User.findById(decoded.id).lean();
+            if (userDoc) {
+                user = {
+                    first_name: userDoc.first_name,
+                    email: userDoc.email,
+                    role: userDoc.role
+                };
+            }
+        } catch (err) {
+            // Token inválido o expirado, user queda null
+            console.log('[PRODUCTS] Token error:', err.message);
+        }
+    }
+    
     res.render('products', { 
         title: 'Productos',
-        user: token ? true : null // Simplificado, solo para mostrar/ocultar nav
+        user
     });
 });
 

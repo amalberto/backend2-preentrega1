@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const cartContainer = document.getElementById('cart-items');
   const summary = document.getElementById('cart-summary');
 
-  // Obtener carrito actual
-  const cartRes = await fetch('/api/carts/mine', { method: 'POST', credentials: 'include' });
+  // Obtener carrito actual (GET es más semántico, pero POST también funciona)
+  const cartRes = await fetch('/api/carts/mine', { credentials: 'include' });
   if (!cartRes.ok) return alert('Error al obtener carrito');
   const { payload } = await cartRes.json();
   const cartId = payload.cartId;
@@ -26,15 +26,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       const div = document.createElement('div');
       div.className = 'cart-item';
       div.innerHTML = `
-        <span>${item.product.title}</span>
-        <span>$${item.product.price}</span>
+        <span class="item-title">${item.product.title}</span>
+        <span class="item-price">$${item.product.price}</span>
         <div class="qty-control">
-          <button class="qty-btn" data-action="dec" data-pid="${item.product._id}">-</button>
+          <button type="button" class="qty-btn" data-action="dec" data-pid="${item.product._id}">−</button>
           <input type="number" value="${item.quantity}" min="1" readonly>
-          <button class="qty-btn" data-action="inc" data-pid="${item.product._id}">+</button>
+          <button type="button" class="qty-btn" data-action="inc" data-pid="${item.product._id}">+</button>
         </div>
-        <span class="subtotal">$${subtotal.toFixed(2)}</span>
-        <button class="btn btn-danger btn-sm" data-action="remove" data-pid="${item.product._id}">❌</button>
+        <span class="item-subtotal">$${subtotal.toFixed(2)}</span>
+        <button type="button" class="btn-remove" data-action="remove" data-pid="${item.product._id}">🗑️</button>
       `;
       cartContainer.appendChild(div);
     });
@@ -96,7 +96,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      const { ticket, unprocessedProducts } = data.payload;
+      // La API devuelve { status, message, ticket?, unprocessedProducts? } directamente
+      const { ticket, unprocessedProducts } = data;
       let html = '';
 
       // Mostrar ticket si existe

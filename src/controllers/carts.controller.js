@@ -24,7 +24,7 @@ class CartController {
     }
 
     /**
-     * POST /api/carts/mine
+     * GET/POST /api/carts/mine
      * Crear u obtener el carrito del usuario autenticado
      */
     async mine(req, res, next) {

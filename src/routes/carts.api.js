@@ -7,9 +7,18 @@ import { authorization } from '../middlewares/authorization.js';
 const router = Router();
 
 /**
+ * GET /api/carts/mine
+ * Obtener o crear el carrito del usuario autenticado
+ */
+router.get('/mine',
+    passportCall('current'),
+    authorization('user'),
+    cartController.mine.bind(cartController)
+);
+
+/**
  * POST /api/carts/mine
- * Crear u obtener el carrito del usuario autenticado
- * (evita que el front "adivine" el cartId)
+ * Crear u obtener el carrito del usuario autenticado (alias de GET)
  */
 router.post('/mine',
     passportCall('current'),
@@ -19,9 +28,13 @@ router.post('/mine',
 
 /**
  * POST /api/carts
- * Crear carrito vacío (público por ahora)
+ * Crear carrito vacío (protegido - solo user)
  */
-router.post('/', cartController.create.bind(cartController));
+router.post('/',
+    passportCall('current'),
+    authorization('user'),
+    cartController.create.bind(cartController)
+);
 
 /**
  * GET /api/carts/:cid

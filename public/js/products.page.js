@@ -29,7 +29,8 @@ async function getCurrentUser() {
     const res = await fetch('/api/users/current', { credentials: 'include' });
     if (!res.ok) return null;
     const data = await res.json();
-    return data?.payload || null;
+    // La API devuelve { ok, user } no { payload }
+    return data?.user || data?.payload || null;
   } catch {
     return null;
   }
@@ -72,6 +73,7 @@ async function safeJson(res) {
 async function addToCart(productId, quantity) {
   // 1) sesión
   const user = await getCurrentUser();
+  
   if (!user) {
     window.location.href = '/users/login';
     return;
@@ -85,8 +87,10 @@ async function addToCart(productId, quantity) {
   const cartId = await ensureCartId();
 
   // 3) llamada
+  const url = `/api/carts/${cartId}/products/${productId}`;
+  
   const doRequest = async () =>
-    fetch(`/api/carts/${cartId}/products/${productId}`, {
+    fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -131,7 +135,7 @@ function buildProductCard(product) {
           value="1"
           ${disabled ? 'disabled' : ''}
         />
-        <button class="btn-add-cart" ${disabled ? 'disabled' : ''}>
+        <button type="button" class="btn-add-cart" ${disabled ? 'disabled' : ''}>
           ${buttonLabel}
         </button>
       </div>
@@ -184,6 +188,10 @@ function wireAddToCart() {
   productsGrid.addEventListener('click', async (e) => {
     const button = e.target?.closest?.('.btn-add-cart');
     if (!button) return;
+    
+    // Prevenir cualquier comportamiento por defecto
+    e.preventDefault();
+    e.stopPropagation();
 
     const card = button.closest('.product-card');
     const productId = card?.dataset?.pid;

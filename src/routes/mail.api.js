@@ -12,7 +12,12 @@ const router = Router();
  */
 router.get('/status', (req, res) => {
     const result = verifyMailConfig();
-    res.json(result);
+    // Transformar a formato esperado por el frontend
+    if (result.valid) {
+        res.json({ status: 'success', message: 'Configuración de mail OK' });
+    } else {
+        res.status(400).json({ status: 'error', message: result.error });
+    }
 });
 
 /**
@@ -24,9 +29,9 @@ router.get('/status/smtp', async (req, res, next) => {
         const result = await verifyTransporter();
         
         if (result.valid) {
-            res.json(result);
+            res.json({ status: 'success', message: 'Conexión SMTP verificada' });
         } else {
-            res.status(500).json(result);
+            res.status(500).json({ status: 'error', message: result.error || 'Error de conexión SMTP' });
         }
     } catch (error) {
         next(error);
