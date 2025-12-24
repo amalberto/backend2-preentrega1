@@ -20,10 +20,6 @@ import passport from 'passport';
 // Rutas API
 import usersApiRoutes from './routes/users.api.js'; // API de usuarios
 import sessionsRoutes from './routes/sessions.routes.js';
-import protectedRoutes from './routes/protected.routes.js';
-import advancedRoutes from './routes/advanced.routes.js';
-import petsRoutes from './routes/pets.routes.js';
-import processRoutes from './routes/process.routes.js';
 import productsApiRouter from './routes/products.api.js';
 import cartsApiRouter from './routes/carts.api.js';
 import mailApiRouter from './routes/mail.api.js';
@@ -36,7 +32,6 @@ import usersViewsRoutes from './routes/users.views.js'; // Vistas Handlebars
 // Middlewares
 import { createSessionMW } from './config/session.js';
 import errorMW from './middlewares/error.js';
-import { jwtAuth } from './middlewares/jwtAuth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -115,15 +110,6 @@ app.use('/api/carts', cartsApiRouter); // Carts API
 app.use('/api/mail', mailApiRouter); // Mail API (test)
 app.use('/api/password-reset', passwordResetApiRouter); // Password Reset API (público)
 app.use('/api/tickets', ticketsApiRouter); // Tickets API (user)
-app.use('/private', protectedRoutes); // Rutas protegidas
-app.use('/api/advanced', advancedRoutes); // Custom Router
-app.use('/api/pets', petsRoutes); // Router.param + regex
-app.use('/api/process', processRoutes); // Process + child_process
-
-// Ruta de prueba JWT (header)
-app.get('/api/jwt/me', jwtAuth, (req, res) => {
-    res.json({ jwt: req.jwt });
-});
 
 /* ===== Admin Panel (solo admin) ===== */
 import { passportCall } from './utils/passportCall.js';

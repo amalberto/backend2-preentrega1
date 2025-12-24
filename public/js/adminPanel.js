@@ -5,10 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check config
     document.getElementById('checkConfig')?.addEventListener('click', async () => {
         try {
-            const res = await fetch('/api/mail/status');
+            const res = await fetch('/api/mail/status', { credentials: 'include' });
             const data = await res.json();
-            configStatus.textContent = data.valid ? '✅ Config OK' : '❌ Config inválida';
-            configStatus.className = 'status ' + (data.valid ? 'success' : 'error');
+            const ok = res.ok && data.status === 'success';
+            configStatus.textContent = ok ? '✅ Config OK' : `❌ ${data.message || 'Config inválida'}`;
+            configStatus.className = 'status ' + (ok ? 'success' : 'error');
         } catch (err) {
             configStatus.textContent = '❌ Error: ' + err.message;
             configStatus.className = 'status error';
@@ -19,10 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('checkSmtp')?.addEventListener('click', async () => {
         configStatus.textContent = '⏳ Verificando SMTP...';
         try {
-            const res = await fetch('/api/mail/status/smtp');
+            const res = await fetch('/api/mail/status/smtp', { credentials: 'include' });
             const data = await res.json();
-            configStatus.textContent = data.valid ? '✅ SMTP conectado' : '❌ SMTP falló';
-            configStatus.className = 'status ' + (data.valid ? 'success' : 'error');
+            const ok = res.ok && data.status === 'success';
+            configStatus.textContent = ok ? '✅ SMTP conectado' : `❌ ${data.message || 'SMTP falló'}`;
+            configStatus.className = 'status ' + (ok ? 'success' : 'error');
         } catch (err) {
             configStatus.textContent = '❌ Error: ' + err.message;
             configStatus.className = 'status error';
@@ -40,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/mail/test', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ 
                     to, 
                     subject: 'Test desde Admin Panel', 
