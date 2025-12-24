@@ -25,9 +25,13 @@ router.post('/', cartController.create.bind(cartController));
 
 /**
  * GET /api/carts/:cid
- * Obtener carrito por ID (público)
+ * Obtener carrito por ID (protegido, valida propiedad)
  */
-router.get('/:cid', cartController.getById.bind(cartController));
+router.get('/:cid',
+    passportCall('current'),
+    authorization('user'),
+    cartController.getById.bind(cartController)
+);
 
 /**
  * POST /api/carts/:cid/products/:pid
@@ -37,6 +41,16 @@ router.post('/:cid/products/:pid',
     passportCall('current'),
     authorization('user'),
     cartController.addProduct.bind(cartController)
+);
+
+/**
+ * PUT /api/carts/:cid/products/:pid
+ * Actualizar cantidad de producto en carrito (solo user)
+ */
+router.put('/:cid/products/:pid',
+    passportCall('current'),
+    authorization('user'),
+    cartController.updateProductQuantity.bind(cartController)
 );
 
 /**

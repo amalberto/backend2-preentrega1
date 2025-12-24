@@ -45,12 +45,31 @@ class CartController {
 
     /**
      * GET /api/carts/:cid
-     * Obtener carrito por ID
+     * Obtener carrito por ID (valida propiedad)
      */
     async getById(req, res, next) {
         try {
             const { cid } = req.params;
-            const cart = await cartService.getById(cid);
+            const cart = await cartService.getById(cid, req.user);
+            
+            res.json({
+                status: 'success',
+                payload: cart
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * PUT /api/carts/:cid/products/:pid
+     * Actualizar cantidad de producto en carrito
+     */
+    async updateProductQuantity(req, res, next) {
+        try {
+            const { cid, pid } = req.params;
+            const { quantity } = req.body;
+            const cart = await cartService.updateProductQuantity(cid, pid, quantity, req.user);
             
             res.json({
                 status: 'success',

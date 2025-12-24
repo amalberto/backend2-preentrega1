@@ -83,9 +83,10 @@ class CartService {
     /**
      * Obtener carrito por ID con productos populados
      * @param {string} id - ID del carrito
+     * @param {Object} user - Usuario autenticado (para validar propiedad)
      * @returns {Promise<Object>}
      */
-    async getById(id) {
+    async getById(id, user = null) {
         if (!mongoose.isValidObjectId(id)) {
             const error = new Error('ID de carrito inválido');
             error.statusCode = 400;
@@ -98,7 +99,71 @@ class CartService {
             error.statusCode = 404;
             throw error;
         }
+
+        // Validar propiedad del carrito para usuarios role=user
+        if (user && user.role === 'user' && user.cart && user.cart.toString() !== id) {
+            const error = new Error('No tenés permiso para acceder a este carrito');
+            error.statusCode = 403;
+            throw error;
+        }
+
         return cart;
+    }
+
+    /**
+     * Actualizar cantidad de un producto en el carrito
+     * @param {string} cartId - ID del carrito
+     * @param {string} productId - ID del producto
+     * @param {number} quantity - Nueva cantidad
+     * @param {Object} user - Usuario autenticado
+     * @returns {Promise<Object>}
+     */
+    async updateProductQuantity(cartId, productId, quantity, user = null) {
+        if (!mongoose.isValidObjectId(cartId)) {
+            const error = new Error('ID de carrito inválido');
+            error.statusCode = 400;
+            throw error;
+        }
+        if (!mongoose.isValidObjectId(productId)) {
+            const error = new Error('ID de producto inválido');
+            error.statusCode = 400;
+            throw error;
+        }
+
+        const parsedQty = parseInt(quantity, 10);
+        if (!Number.isInteger(parsedQty) || parsedQty < 1) {
+            const error = new Error('quantity debe ser un entero >= 1');
+            error.statusCode = 400;
+            throw error;
+        }
+
+        const cart = await this.repository.getById(cartId);
+        if (!cart) {
+            const error = new Error('Carrito no encontrado');
+            error.statusCode = 404;
+            throw error;
+        }
+
+        // Validar propiedad del carrito
+        if (user && user.role === 'user' && user.cart && user.cart.toString() !== cartId) {
+            const error = new Error('No tenés permiso para modificar este carrito');
+            error.statusCode = 403;
+            throw error;
+        }
+
+        // Verificar que el producto existe en el carrito
+        const exists = (cart.products || []).some(i => {
+            const pid = i.product?._id || i.product;
+            return pid.toString() === productId;
+        });
+        if (!exists) {
+            const error = new Error('El producto no está en el carrito');
+            error.statusCode = 404;
+            throw error;
+        }
+
+        await this.repository.updateProductQuantity(cartId, productId, parsedQty);
+        return await this.repository.getByIdWithProducts(cartId);
     }
 
     /**
