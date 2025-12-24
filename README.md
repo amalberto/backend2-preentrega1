@@ -4,7 +4,7 @@ Backend con Express, MongoDB, autenticación JWT, autorización por roles, carri
 
 ---
 
-##  Inicio Rápido
+## 🚀 Inicio Rápido
 
 ### Requisitos
 - Node.js 18+
@@ -26,6 +26,25 @@ cp .env.example .env
 node server.js --env development
 ```
 
+El servidor corre en **http://localhost:3000** por defecto.
+
+---
+
+## 🌐 Vistas (Frontend)
+
+| Ruta | Acceso | Descripción |
+|------|--------|-------------|
+| `/users/login` | Público | Formulario de login |
+| `/users/register` | Público | Formulario de registro |
+| `/users/current` | Autenticado | Perfil del usuario |
+| `/products` | Público | Catálogo de productos |
+| `/my-cart` | User | Carrito de compras |
+| `/my-tickets` | User | Historial de compras |
+| `/admin-panel` | Admin | Panel con checks de mail |
+| `/admin-products` | Admin | CRUD de productos |
+| `/forgot-password` | Público | Solicitar reset de password |
+| `/reset-password` | Público | Formulario para nueva contraseña |
+
 ---
 
 ##  Variables de Entorno
@@ -35,7 +54,7 @@ Crear archivo `.env` basado en `.env.example`:
 ```env
 # === SERVER ===
 NODE_ENV=development
-PORT=8080
+PORT=3000
 
 # === DATABASE ===
 MONGO_URI=mongodb://localhost:27017/backend2
@@ -123,11 +142,20 @@ RESET_PASSWORD_URL_BASE=http://localhost:3000
 | Método | Endpoint | Auth | Rol | Descripción |
 |--------|----------|------|-----|-------------|
 | POST | `/` | - | - | Crear carrito vacío |
+| POST | `/mine` | JWT | user | Obtener/crear mi carrito |
 | GET | `/:cid` | - | - | Ver carrito |
 | POST | `/:cid/products/:pid` | JWT | user | Agregar producto |
+| PUT | `/:cid/products/:pid` | JWT | user | Modificar cantidad |
 | DELETE | `/:cid/products/:pid` | JWT | user | Quitar producto |
 | DELETE | `/:cid` | JWT | user | Vaciar carrito |
 | POST | `/:cid/purchase` | JWT | user | **Finalizar compra** |
+
+### Tickets (`/api/tickets`)
+
+| Método | Endpoint | Auth | Rol | Descripción |
+|--------|----------|------|-----|-------------|
+| GET | `/mine` | JWT | user | Historial de compras |
+| GET | `/:code` | JWT | user | Detalle de ticket (solo propio) |
 
 ### Password Reset (`/api/password-reset`)
 
@@ -296,3 +324,51 @@ Invoke-WebRequest -Uri "http://localhost:3000/api/users/current" -WebSession $se
 > **Nota**: La cookie JWT se almacena automáticamente en `$session` y se envía en requests posteriores con `-WebSession`.
 
 ---
+
+## ✅ Checklist de Pruebas Manuales
+
+### Autenticación
+- [ ] Registrar usuario normal → rol `user`
+- [ ] Registrar admin (`admin@ejemplo.com` / `adminejemplO123`) → rol `admin`
+- [ ] Login redirige a `/users/current`
+- [ ] Logout limpia cookie y redirige a login
+- [ ] Toggle de visibilidad en campos de contraseña (ojito)
+
+### Roles y Permisos
+- [ ] User puede ver `/products`, `/my-cart`, `/my-tickets`
+- [ ] User **NO** puede acceder a `/admin-panel`, `/admin-products`
+- [ ] Admin puede ver `/admin-panel`, `/admin-products`
+- [ ] Admin **NO** puede agregar al carrito ni comprar
+
+### Carrito y Compra (como User)
+- [ ] Agregar producto al carrito desde `/products`
+- [ ] Ver carrito en `/my-cart`
+- [ ] Modificar cantidad (+/-)
+- [ ] Eliminar producto del carrito
+- [ ] Vaciar carrito completo
+- [ ] Finalizar compra → genera ticket
+- [ ] Ver ticket en `/my-tickets`
+- [ ] Producto sin stock → queda en carrito como `unprocessedProducts`
+
+### Admin Panel
+- [ ] Verificar config de mail (botón)
+- [ ] Verificar SMTP (botón)
+- [ ] Enviar mail de prueba
+
+### CRUD Productos (como Admin)
+- [ ] Crear producto desde `/admin-products`
+- [ ] Editar producto (carga datos en form)
+- [ ] Eliminar producto (con confirmación)
+- [ ] Producto inactivo se muestra diferente
+
+### Password Reset
+- [ ] Solicitar reset desde `/forgot-password`
+- [ ] Recibir email con link
+- [ ] Restablecer contraseña desde el link
+- [ ] Login con nueva contraseña
+
+---
+
+## 📄 Licencia
+
+ISC
